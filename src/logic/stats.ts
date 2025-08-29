@@ -5,12 +5,12 @@ export interface Stats {
   bestStreak: number;
   onTimeRate: number;
   perPrayerStats: Record<string, number>;
-  weeklyData: Array<{
+  weeklyData: {
     day: string;
     completed: number;
     total: number;
     percentage: number;
-  }>;
+  }[];
   totalPrayers: number;
   completedPrayers: number;
 }
@@ -34,23 +34,32 @@ export const calculateStats = (prayerRecords: PrayerRecord[]): Stats => {
     };
   }
 
-  // Sort records by date (newest first for streak calculation)
-  const sortedRecords = [...prayerRecords].sort((a, b) => 
-    new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
+
 
   // Calculate current streak (consecutive days only)
   let currentStreak = 0;
-  let expectedDate = new Date();
-  expectedDate.setHours(0, 0, 0, 0); // Start from today
+  let checkDate = new Date();
+  checkDate.setHours(0, 0, 0, 0); // Start from today
   
-  for (const record of sortedRecords) {
-    const recordDate = new Date(record.date);
-    recordDate.setHours(0, 0, 0, 0);
+  // Start from yesterday if today is not complete yet
+  const today = new Date().toISOString().split('T')[0];
+  const todayRecord = prayerRecords.find(r => r.date === today);
+  const todayCompleted = todayRecord ? todayRecord.prayers.filter(p => 
+    p.status === 'on-time' || p.status === 'late'
+  ).length : 0;
+  
+  // If today is not complete (less than 5 prayers), start checking from yesterday
+  if (todayCompleted < 5) {
+    checkDate.setDate(checkDate.getDate() - 1);
+  }
+  
+  // Check consecutive days backwards from the starting date
+  while (true) {
+    const dateStr = checkDate.toISOString().split('T')[0];
+    const record = prayerRecords.find(r => r.date === dateStr);
     
-    // Check if this record is for the expected consecutive date
-    if (recordDate.getTime() !== expectedDate.getTime()) {
-      // If it's not consecutive, stop counting
+    if (!record) {
+      // No record for this date, streak ends
       break;
     }
     
@@ -60,9 +69,10 @@ export const calculateStats = (prayerRecords: PrayerRecord[]): Stats => {
     
     if (completedCount === 5) {
       currentStreak++;
-      // Move to the previous day for next iteration
-      expectedDate.setDate(expectedDate.getDate() - 1);
+      // Move to the previous day
+      checkDate.setDate(checkDate.getDate() - 1);
     } else {
+      // Day was not complete, streak ends
       break;
     }
   }
@@ -149,10 +159,10 @@ export const calculateStats = (prayerRecords: PrayerRecord[]): Stats => {
 
   // Calculate weekly data (last 7 days)
   const weeklyData = [];
-  const today = new Date();
+  const currentDate = new Date();
   
   for (let i = 6; i >= 0; i--) {
-    const date = new Date(today);
+    const date = new Date(currentDate);
     date.setDate(date.getDate() - i);
     const dateStr = date.toISOString().split('T')[0];
     
