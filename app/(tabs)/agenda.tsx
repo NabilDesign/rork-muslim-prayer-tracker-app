@@ -68,7 +68,7 @@ export default function AgendaScreen() {
         if (todaysPrayers.length > 0) {
           record = {
             date: dateStr,
-            prayers: todaysPrayers
+            prayers: [...todaysPrayers] // Create a new array to ensure reactivity
           };
         } else if (!record) {
           // If no todaysPrayers and no record, create default pending prayers
@@ -102,6 +102,13 @@ export default function AgendaScreen() {
           status = 'partial';
         } else {
           status = 'missed';
+        }
+      } else if (dateStr === todayStr && record && record.prayers.length > 0) {
+        // Special case for today - show as future if all prayers are pending
+        const allPending = record.prayers.every(p => p.status === 'pending');
+        if (allPending) {
+          status = 'future';
+          completed = 0;
         }
       } else {
         // Days without prayer data (including today if no prayers marked yet)
@@ -320,7 +327,7 @@ export default function AgendaScreen() {
                 if (todaysPrayers.length > 0) {
                   record = {
                     date: selectedDate,
-                    prayers: todaysPrayers
+                    prayers: [...todaysPrayers] // Create a new array to ensure reactivity
                   };
                 } else if (!record) {
                   // If no todaysPrayers and no record, create default pending prayers
@@ -353,7 +360,7 @@ export default function AgendaScreen() {
                 const IconComponent = prayerIcons[prayer.name as keyof typeof prayerIcons];
                 return (
                   <PrayerCard
-                    key={prayer.name}
+                    key={`${prayer.name}-${selectedDate}`}
                     prayer={prayer}
                     icon={IconComponent}
                     readonly={false}
