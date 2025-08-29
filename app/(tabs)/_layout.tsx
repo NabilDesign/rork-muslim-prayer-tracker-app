@@ -42,7 +42,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="agenda"
         options={{
-          title: "Agenda",
+          title: "Calendar",
           tabBarIcon: ({ color, size }) => <CalendarDays color={color} size={size} />,
         }}
       />
