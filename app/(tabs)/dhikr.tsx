@@ -16,6 +16,7 @@ import { useDhikrStore } from '@/src/store/dhikr-store';
 interface DhikrItem {
   id: string;
   text: string;
+  transliteration: string;
   translation: string;
   count: number;
   category: string;
@@ -25,6 +26,7 @@ const AVAILABLE_DHIKR: DhikrItem[] = [
   {
     id: '1',
     text: 'سُبْحَانَ اللَّهِ',
+    transliteration: 'Subhan Allah',
     translation: 'Glory be to Allah',
     count: 33,
     category: 'Tasbih'
@@ -32,6 +34,7 @@ const AVAILABLE_DHIKR: DhikrItem[] = [
   {
     id: '2',
     text: 'الْحَمْدُ لِلَّهِ',
+    transliteration: 'Alhamdulillah',
     translation: 'Praise be to Allah',
     count: 33,
     category: 'Tahmid'
@@ -39,6 +42,7 @@ const AVAILABLE_DHIKR: DhikrItem[] = [
   {
     id: '3',
     text: 'اللَّهُ أَكْبَرُ',
+    transliteration: 'Allahu Akbar',
     translation: 'Allah is the Greatest',
     count: 34,
     category: 'Takbir'
@@ -46,6 +50,7 @@ const AVAILABLE_DHIKR: DhikrItem[] = [
   {
     id: '4',
     text: 'لَا إِلَهَ إِلَّا اللَّهُ',
+    transliteration: 'La ilaha illa Allah',
     translation: 'There is no god but Allah',
     count: 100,
     category: 'Tahlil'
@@ -53,6 +58,7 @@ const AVAILABLE_DHIKR: DhikrItem[] = [
   {
     id: '5',
     text: 'أَسْتَغْفِرُ اللَّهَ',
+    transliteration: 'Astaghfirullah',
     translation: 'I seek forgiveness from Allah',
     count: 100,
     category: 'Istighfar'
@@ -60,6 +66,7 @@ const AVAILABLE_DHIKR: DhikrItem[] = [
   {
     id: '6',
     text: 'سُبْحَانَ اللَّهِ وَبِحَمْدِهِ',
+    transliteration: 'Subhan Allahi wa bihamdihi',
     translation: 'Glory be to Allah and praise Him',
     count: 100,
     category: 'Tasbih'
@@ -67,6 +74,7 @@ const AVAILABLE_DHIKR: DhikrItem[] = [
   {
     id: '7',
     text: 'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ',
+    transliteration: 'La hawla wa la quwwata illa billah',
     translation: 'There is no power except with Allah',
     count: 100,
     category: 'Hawqala'
@@ -74,6 +82,7 @@ const AVAILABLE_DHIKR: DhikrItem[] = [
   {
     id: '8',
     text: 'رَبِّ اغْفِرْ لِي',
+    transliteration: 'Rabbi ghfir li',
     translation: 'My Lord, forgive me',
     count: 100,
     category: 'Dua'
@@ -171,6 +180,7 @@ export default function DhikrScreen() {
 
             <View style={styles.dhikrCard}>
               <Text style={styles.dhikrArabic}>{currentDhikr?.text}</Text>
+              <Text style={styles.dhikrTransliteration}>{currentDhikr?.transliteration}</Text>
               <Text style={styles.dhikrTranslation}>{currentDhikr?.translation}</Text>
               
               <View style={styles.counterContainer}>
@@ -299,6 +309,7 @@ export default function DhikrScreen() {
                     
                     <View style={styles.dhikrOptionContent}>
                       <Text style={styles.dhikrOptionArabic}>{dhikr.text}</Text>
+                      <Text style={styles.dhikrOptionTransliteration}>{dhikr.transliteration}</Text>
                       <Text style={styles.dhikrOptionTranslation}>{dhikr.translation}</Text>
                       
                       {isSelected && (
@@ -398,6 +409,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 8,
     lineHeight: 40,
+  },
+  dhikrTransliteration: {
+    fontSize: 18,
+    color: '#059669',
+    textAlign: 'center',
+    marginBottom: 8,
+    fontWeight: '500',
   },
   dhikrTranslation: {
     fontSize: 16,
@@ -611,6 +629,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#1E293B',
+    marginBottom: 4,
+  },
+  dhikrOptionTransliteration: {
+    fontSize: 15,
+    color: '#059669',
+    fontWeight: '500',
     marginBottom: 4,
   },
   dhikrOptionTranslation: {

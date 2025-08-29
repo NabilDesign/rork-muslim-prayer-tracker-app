@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export interface DhikrItem {
   id: string;
   text: string;
+  transliteration: string;
   translation: string;
   count: number;
   category: string;
