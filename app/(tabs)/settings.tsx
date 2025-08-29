@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -17,38 +17,41 @@ import {
   Trash2,
   Info,
   Heart,
+  CheckCircle,
+  XCircle,
 } from 'lucide-react-native';
 import { usePrayerStore } from '@/src/store/app-store';
+import { notificationManager, getFrequencyText } from '@/src/logic/notifications';
 
-const getReminderFrequencyText = (minutes: number): string => {
-  switch (minutes) {
-    case 720:
-      return '2 times a day';
-    case 1440:
-      return 'Once a day';
-    case 360:
-      return 'Every 6 hours';
-    case 240:
-      return 'Every 4 hours';
-    case 120:
-      return 'Every 2 hours';
-    case 60:
-      return 'Every hour';
-    case 30:
-      return 'Every 30 minutes';
-    default:
-      return `Every ${minutes} minutes`;
-  }
-};
+
 
 export default function SettingsScreen() {
   const { settings, updateSettings, clearAllData } = usePrayerStore();
   const [remindersEnabled, setRemindersEnabled] = useState(settings.notificationsEnabled);
   const [reminderMinutes, setReminderMinutes] = useState(settings.reminderMinutes);
+  const [notificationStatus, setNotificationStatus] = useState<'checking' | 'granted' | 'denied'>('checking');
 
-  const handleReminderToggle = (value: boolean) => {
+  useEffect(() => {
+    checkNotificationStatus();
+  }, []);
+
+  const checkNotificationStatus = async () => {
+    const hasPermission = await notificationManager.requestPermissions();
+    setNotificationStatus(hasPermission ? 'granted' : 'denied');
+  };
+
+  const handleReminderToggle = async (value: boolean) => {
     setRemindersEnabled(value);
     updateSettings({ notificationsEnabled: value });
+    
+    // Schedule or cancel notifications
+    await notificationManager.scheduleReminders({
+      enabled: value,
+      frequency: reminderMinutes,
+    });
+    
+    // Recheck notification status
+    await checkNotificationStatus();
   };
 
   const handleClearData = () => {
@@ -123,33 +126,72 @@ export default function SettingsScreen() {
           </SettingItem>
 
           <SettingItem
+            icon={notificationStatus === 'granted' ? CheckCircle : XCircle}
+            title="Notification Status"
+            subtitle={notificationStatus === 'checking' ? 'Checking permissions...' : 
+                     notificationStatus === 'granted' ? 'Notifications enabled' : 
+                     'Notifications disabled - tap to enable'}
+            onPress={notificationStatus === 'denied' ? checkNotificationStatus : undefined}
+          />
+
+          <SettingItem
             icon={Clock}
             title="Reminder Frequency"
-            subtitle={`${getReminderFrequencyText(reminderMinutes)}`}
+            subtitle={`${getFrequencyText(reminderMinutes)}`}
             onPress={() => {
               Alert.alert(
                 'Reminder Frequency',
                 'Choose how often you want to be reminded to track your prayers',
                 [
-                  { text: '2 times a day', onPress: () => {
+                  { text: '2 times a day', onPress: async () => {
                     setReminderMinutes(720); // 12 hours
                     updateSettings({ reminderMinutes: 720 });
+                    if (remindersEnabled) {
+                      await notificationManager.scheduleReminders({
+                        enabled: true,
+                        frequency: 720,
+                      });
+                    }
                   }},
-                  { text: 'Once a day', onPress: () => {
+                  { text: 'Once a day', onPress: async () => {
                     setReminderMinutes(1440); // 24 hours
                     updateSettings({ reminderMinutes: 1440 });
+                    if (remindersEnabled) {
+                      await notificationManager.scheduleReminders({
+                        enabled: true,
+                        frequency: 1440,
+                      });
+                    }
                   }},
-                  { text: 'Every 6 hours', onPress: () => {
+                  { text: 'Every 6 hours', onPress: async () => {
                     setReminderMinutes(360);
                     updateSettings({ reminderMinutes: 360 });
+                    if (remindersEnabled) {
+                      await notificationManager.scheduleReminders({
+                        enabled: true,
+                        frequency: 360,
+                      });
+                    }
                   }},
-                  { text: 'Every 4 hours', onPress: () => {
+                  { text: 'Every 4 hours', onPress: async () => {
                     setReminderMinutes(240);
                     updateSettings({ reminderMinutes: 240 });
+                    if (remindersEnabled) {
+                      await notificationManager.scheduleReminders({
+                        enabled: true,
+                        frequency: 240,
+                      });
+                    }
                   }},
-                  { text: 'Every 2 hours', onPress: () => {
+                  { text: 'Every 2 hours', onPress: async () => {
                     setReminderMinutes(120);
                     updateSettings({ reminderMinutes: 120 });
+                    if (remindersEnabled) {
+                      await notificationManager.scheduleReminders({
+                        enabled: true,
+                        frequency: 120,
+                      });
+                    }
                   }},
                   { text: 'Cancel', style: 'cancel' },
                 ]

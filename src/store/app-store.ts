@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { calculateStats } from '@/src/logic/stats';
 import { getBadgesForUser } from '@/src/logic/motivation';
+import { notificationManager } from '@/src/logic/notifications';
 
 export interface Prayer {
   name: string;
@@ -81,7 +82,7 @@ const STORAGE_KEYS = {
 
 const defaultSettings: Settings = {
   notificationsEnabled: true,
-  reminderMinutes: 10,
+  reminderMinutes: 720, // 2 times a day
   calculationMethod: 'ISNA',
   location: null,
 };
@@ -345,6 +346,14 @@ export const usePrayerStore = create<PrayerStore>((set, get) => ({
     const updatedSettings = { ...get().settings, ...updates };
     set({ settings: updatedSettings });
     AsyncStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(updatedSettings));
+    
+    // Update notifications if settings changed
+    if (updates.notificationsEnabled !== undefined || updates.reminderMinutes !== undefined) {
+      notificationManager.scheduleReminders({
+        enabled: updatedSettings.notificationsEnabled,
+        frequency: updatedSettings.reminderMinutes,
+      });
+    }
   },
 
   clearAllData: () => {
@@ -359,6 +368,9 @@ export const usePrayerStore = create<PrayerStore>((set, get) => ({
     Object.values(STORAGE_KEYS).forEach(key => {
       AsyncStorage.removeItem(key);
     });
+    
+    // Cancel all notifications
+    notificationManager.cancelAllReminders();
   },
 
   getStreakDays: () => {
@@ -401,11 +413,19 @@ const initializeStore = async () => {
       AsyncStorage.getItem(STORAGE_KEYS.SETTINGS),
     ]);
 
+    const parsedSettings = settings ? { ...defaultSettings, ...JSON.parse(settings) } : defaultSettings;
+    
     usePrayerStore.setState({
       prayerRecords: records ? JSON.parse(records) : [],
       reflections: reflections ? JSON.parse(reflections) : [],
       badges: badges ? JSON.parse(badges) : [],
-      settings: settings ? { ...defaultSettings, ...JSON.parse(settings) } : defaultSettings,
+      settings: parsedSettings,
+    });
+    
+    // Initialize notifications with current settings
+    await notificationManager.scheduleReminders({
+      enabled: parsedSettings.notificationsEnabled,
+      frequency: parsedSettings.reminderMinutes,
     });
   } catch (error) {
     console.error('Error initializing store:', error);
