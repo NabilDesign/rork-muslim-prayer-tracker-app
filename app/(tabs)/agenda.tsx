@@ -179,7 +179,7 @@ export default function AgendaScreen() {
       >
         <View style={styles.headerContent}>
           <Calendar color="#FFFFFF" size={32} />
-          <Text style={styles.headerTitle}>Prayer Agenda</Text>
+          <Text style={styles.headerTitle}>Calendar</Text>
           <Text style={styles.headerSubtitle}>Track your daily progress</Text>
         </View>
         <View style={styles.headerDecoration}>
