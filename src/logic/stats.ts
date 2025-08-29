@@ -1,164 +1,97 @@
-import { PrayerRecord } from '@/src/store/app-store';
+import { Reflection } from '@/src/store/app-store';
 
 export interface Stats {
   currentStreak: number;
   bestStreak: number;
-  onTimeRate: number;
-  perPrayerStats: Record<string, number>;
+  completionRate: number;
   weeklyData: {
     day: string;
     completed: number;
     total: number;
     percentage: number;
   }[];
-  totalPrayers: number;
-  completedPrayers: number;
+  totalReflections: number;
+  thisWeekReflections: number;
 }
 
-export const calculateStats = (prayerRecords: PrayerRecord[]): Stats => {
-  if (prayerRecords.length === 0) {
+const getPreviousDate = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  date.setDate(date.getDate() - 1);
+  return date.toISOString().split('T')[0];
+};
+
+const isConsecutiveDate = (date1: string, date2: string): boolean => {
+  const d1 = new Date(date1);
+  const d2 = new Date(date2);
+  const diffTime = Math.abs(d2.getTime() - d1.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays === 1;
+};
+
+export const calculateStats = (reflections: Reflection[]): Stats => {
+  if (reflections.length === 0) {
     return {
       currentStreak: 0,
       bestStreak: 0,
-      onTimeRate: 0,
-      perPrayerStats: {
-        Fajr: 0,
-        Dhuhr: 0,
-        Asr: 0,
-        Maghrib: 0,
-        Isha: 0,
-      },
+      completionRate: 0,
       weeklyData: [],
-      totalPrayers: 0,
-      completedPrayers: 0,
+      totalReflections: 0,
+      thisWeekReflections: 0,
     };
   }
 
+  // Group reflections by date
+  const reflectionsByDate = reflections.reduce((acc, reflection) => {
+    const date = reflection.createdAt.split('T')[0];
+    acc[date] = (acc[date] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
 
-
-  // Calculate current streak (consecutive days only)
-  let currentStreak = 0;
-  let checkDate = new Date();
-  checkDate.setHours(0, 0, 0, 0); // Start from today
-  
-  // Start from yesterday if today is not complete yet
+  // Calculate current streak (consecutive days with reflections)
   const today = new Date().toISOString().split('T')[0];
-  const todayRecord = prayerRecords.find(r => r.date === today);
-  const todayCompleted = todayRecord ? todayRecord.prayers.filter(p => 
-    p.status === 'on-time' || p.status === 'late'
-  ).length : 0;
+  let currentStreak = 0;
   
-  // If today is not complete (less than 5 prayers), start checking from yesterday
-  if (todayCompleted < 5) {
-    checkDate.setDate(checkDate.getDate() - 1);
-  }
-  
-  // Check consecutive days backwards from the starting date
-  while (true) {
-    const dateStr = checkDate.toISOString().split('T')[0];
-    const record = prayerRecords.find(r => r.date === dateStr);
-    
-    if (!record) {
-      // No record for this date, streak ends
-      break;
-    }
-    
-    const completedCount = record.prayers.filter(p => 
-      p.status === 'on-time' || p.status === 'late'
-    ).length;
-    
-    if (completedCount === 5) {
-      currentStreak++;
-      // Move to the previous day
-      checkDate.setDate(checkDate.getDate() - 1);
-    } else {
-      // Day was not complete, streak ends
-      break;
-    }
+  // Count consecutive days with reflections backwards from today
+  let checkDate = today;
+  while (reflectionsByDate[checkDate]) {
+    currentStreak++;
+    checkDate = getPreviousDate(checkDate);
   }
 
-  // Calculate best streak (consecutive days only)
+  // Calculate best streak
   let bestStreak = 0;
   let tempStreak = 0;
-  let lastDate: Date | null = null;
   
-  // Sort by date (oldest first for best streak calculation)
-  const chronologicalRecords = [...prayerRecords].sort((a, b) => 
-    new Date(a.date).getTime() - new Date(b.date).getTime()
-  );
-
-  for (const record of chronologicalRecords) {
-    const recordDate = new Date(record.date);
-    recordDate.setHours(0, 0, 0, 0);
-    
-    const completedCount = record.prayers.filter(p => 
-      p.status === 'on-time' || p.status === 'late'
-    ).length;
-    
-    if (completedCount === 5) {
-      // Check if this is consecutive to the last date
-      if (lastDate === null) {
-        // First completed day
-        tempStreak = 1;
-      } else {
-        const expectedDate = new Date(lastDate);
-        expectedDate.setDate(expectedDate.getDate() + 1);
-        
-        if (recordDate.getTime() === expectedDate.getTime()) {
-          // Consecutive day
-          tempStreak++;
-        } else {
-          // Not consecutive, start new streak
-          tempStreak = 1;
-        }
-      }
-      
+  // Get all dates with reflections, sorted chronologically
+  const datesWithReflections = Object.keys(reflectionsByDate).sort();
+  
+  let previousDate: string | null = null;
+  
+  datesWithReflections.forEach(date => {
+    // Check if this date is consecutive to the previous date
+    if (previousDate === null || isConsecutiveDate(previousDate, date)) {
+      tempStreak++;
       bestStreak = Math.max(bestStreak, tempStreak);
-      lastDate = recordDate;
     } else {
-      tempStreak = 0;
-      lastDate = null;
+      tempStreak = 1;
     }
-  }
-
-  // Calculate overall stats
-  let totalPrayers = 0;
-  let completedPrayers = 0;
-  let onTimePrayers = 0;
-  const prayerCounts: Record<string, { total: number; onTime: number }> = {
-    Fajr: { total: 0, onTime: 0 },
-    Dhuhr: { total: 0, onTime: 0 },
-    Asr: { total: 0, onTime: 0 },
-    Maghrib: { total: 0, onTime: 0 },
-    Isha: { total: 0, onTime: 0 },
-  };
-
-  prayerRecords.forEach(record => {
-    record.prayers.forEach(prayer => {
-      totalPrayers++;
-      prayerCounts[prayer.name].total++;
-      
-      if (prayer.status === 'on-time' || prayer.status === 'late') {
-        completedPrayers++;
-      }
-      
-      if (prayer.status === 'on-time') {
-        onTimePrayers++;
-        prayerCounts[prayer.name].onTime++;
-      }
-    });
+    previousDate = date;
   });
+  
+  // Ensure current streak is considered for best streak
+  bestStreak = Math.max(bestStreak, currentStreak);
 
-  const onTimeRate = totalPrayers > 0 ? onTimePrayers / totalPrayers : 0;
-
-  // Calculate per-prayer stats
-  const perPrayerStats: Record<string, number> = {};
-  Object.entries(prayerCounts).forEach(([prayer, counts]) => {
-    perPrayerStats[prayer] = counts.total > 0 ? counts.onTime / counts.total : 0;
-  });
+  // Calculate completion rate (days with reflections vs total days since first reflection)
+  const totalReflections = reflections.length;
+  const daysWithReflections = Object.keys(reflectionsByDate).length;
+  const firstReflectionDate = reflections.length > 0 ? 
+    new Date(Math.min(...reflections.map(r => new Date(r.createdAt).getTime()))) : new Date();
+  const totalDaysSinceFirst = Math.ceil((new Date().getTime() - firstReflectionDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  const completionRate = totalDaysSinceFirst > 0 ? daysWithReflections / totalDaysSinceFirst : 0;
 
   // Calculate weekly data (last 7 days)
   const weeklyData = [];
+  let thisWeekReflections = 0;
   const currentDate = new Date();
   
   for (let i = 6; i >= 0; i--) {
@@ -166,26 +99,23 @@ export const calculateStats = (prayerRecords: PrayerRecord[]): Stats => {
     date.setDate(date.getDate() - i);
     const dateStr = date.toISOString().split('T')[0];
     
-    const record = prayerRecords.find(r => r.date === dateStr);
-    const completed = record ? record.prayers.filter(p => 
-      p.status === 'on-time' || p.status === 'late'
-    ).length : 0;
+    const completed = reflectionsByDate[dateStr] || 0;
+    thisWeekReflections += completed;
     
     weeklyData.push({
       day: date.toLocaleDateString('en-US', { weekday: 'short' }),
       completed,
-      total: 5,
-      percentage: (completed / 5) * 100,
+      total: 1, // Target of 1 reflection per day
+      percentage: completed > 0 ? 100 : 0,
     });
   }
 
   return {
     currentStreak,
     bestStreak,
-    onTimeRate,
-    perPrayerStats,
+    completionRate,
     weeklyData,
-    totalPrayers,
-    completedPrayers,
+    totalReflections,
+    thisWeekReflections,
   };
 };

@@ -10,9 +10,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAppStore } from '@/src/store/app-store';
 import { StatsOverview } from '@/src/components/StatsOverview';
+import { WeeklyChart } from '@/src/components/WeeklyChart';
+import { calculateStats } from '@/src/logic/stats';
+import { getMotivationalMessage } from '@/src/logic/motivation';
 
 export default function TodayScreen() {
+  const { reflections } = useAppStore();
   const [refreshing, setRefreshing] = useState(false);
+  
+  const stats = calculateStats(reflections);
+  const motivationalMessage = getMotivationalMessage(stats);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -50,11 +57,17 @@ export default function TodayScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <View style={styles.mainSection}>
-          <Text style={styles.sectionTitle}>Welcome to your Islamic App</Text>
-          <Text style={styles.sectionDescription}>
-            Use the tabs below to access Dhikr, Hadith, and other features.
-          </Text>
+        <View style={styles.statsSection}>
+          <StatsOverview stats={stats} />
+        </View>
+        
+        <View style={styles.chartSection}>
+          <WeeklyChart stats={stats} />
+        </View>
+        
+        <View style={styles.motivationSection}>
+          <Text style={styles.motivationTitle}>Daily Motivation</Text>
+          <Text style={styles.motivationText}>{motivationalMessage}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -133,25 +146,40 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 24,
     backgroundColor: '#F8FAFC',
   },
-  mainSection: {
-    padding: 20,
+  statsSection: {
+    paddingHorizontal: 20,
     paddingTop: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 200,
   },
-  sectionTitle: {
-    fontSize: 22,
+  chartSection: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+  },
+  motivationSection: {
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 20,
+    marginTop: 16,
+    marginBottom: 32,
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.1)',
+  },
+  motivationTitle: {
+    fontSize: 18,
     fontWeight: '800',
     color: '#1E293B',
-    letterSpacing: -0.5,
-    textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
+    letterSpacing: -0.3,
   },
-  sectionDescription: {
+  motivationText: {
     fontSize: 16,
     color: '#6B7280',
-    textAlign: 'center',
     lineHeight: 24,
+    textAlign: 'center',
   },
 });

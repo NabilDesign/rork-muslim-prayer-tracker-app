@@ -1,30 +1,41 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Heart, BookOpen } from 'lucide-react-native';
+import { BookOpen, TrendingUp, Calendar } from 'lucide-react-native';
+import { Stats } from '@/src/logic/stats';
 
 interface StatsOverviewProps {
-  // Remove prayer-specific props, add generic ones if needed
+  stats: Stats;
 }
 
-export const StatsOverview: React.FC<StatsOverviewProps> = () => {
+export const StatsOverview: React.FC<StatsOverviewProps> = ({ stats }) => {
   return (
     <View style={styles.container}>
       <View style={styles.statItem}>
-        <View style={styles.statIcon}>
-          <Heart color="#F59E0B" size={16} />
+        <View style={[styles.statIcon, { backgroundColor: 'rgba(245, 158, 11, 0.1)' }]}>
+          <TrendingUp color="#F59E0B" size={16} />
         </View>
-        <Text style={styles.statValue}>∞</Text>
-        <Text style={styles.statLabel}>Dhikr</Text>
+        <Text style={styles.statValue}>{stats.currentStreak}</Text>
+        <Text style={styles.statLabel}>Day Streak</Text>
       </View>
       
       <View style={styles.separator} />
       
       <View style={styles.statItem}>
-        <View style={styles.statIcon}>
+        <View style={[styles.statIcon, { backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}>
           <BookOpen color="#10B981" size={16} />
         </View>
-        <Text style={styles.statValue}>Daily</Text>
-        <Text style={styles.statLabel}>Hadith</Text>
+        <Text style={styles.statValue}>{stats.totalReflections}</Text>
+        <Text style={styles.statLabel}>Reflections</Text>
+      </View>
+      
+      <View style={styles.separator} />
+      
+      <View style={styles.statItem}>
+        <View style={[styles.statIcon, { backgroundColor: 'rgba(59, 130, 246, 0.1)' }]}>
+          <Calendar color="#3B82F6" size={16} />
+        </View>
+        <Text style={styles.statValue}>{Math.round(stats.completionRate * 100)}%</Text>
+        <Text style={styles.statLabel}>Completion</Text>
       </View>
     </View>
   );
@@ -53,7 +64,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 10,

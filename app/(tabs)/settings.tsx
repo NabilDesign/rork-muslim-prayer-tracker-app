@@ -20,13 +20,13 @@ import {
   CheckCircle,
   XCircle,
 } from 'lucide-react-native';
-import { usePrayerStore } from '@/src/store/app-store';
+import { useAppStore } from '@/src/store/app-store';
 import { notificationManager, getFrequencyText } from '@/src/logic/notifications';
 
 
 
 export default function SettingsScreen() {
-  const { settings, updateSettings, clearAllData } = usePrayerStore();
+  const { settings, updateSettings, clearAllData } = useAppStore();
   const [remindersEnabled, setRemindersEnabled] = useState(settings.notificationsEnabled);
   const [reminderMinutes, setReminderMinutes] = useState(settings.reminderMinutes);
   const [notificationStatus, setNotificationStatus] = useState<'checking' | 'granted' | 'denied'>('checking');
@@ -57,7 +57,7 @@ export default function SettingsScreen() {
   const handleClearData = () => {
     Alert.alert(
       'Clear All Data',
-      'This will permanently delete all your prayer records, reflections, and settings. This action cannot be undone.',
+      'This will permanently delete all your reflections and settings. This action cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -115,7 +115,7 @@ export default function SettingsScreen() {
           <SettingItem
             icon={Bell}
             title="Daily Reminders"
-            subtitle="Get reminded to track your prayers"
+            subtitle="Get reminded for daily reflections"
           >
             <Switch
               value={remindersEnabled}
@@ -141,7 +141,7 @@ export default function SettingsScreen() {
             onPress={() => {
               Alert.alert(
                 'Reminder Frequency',
-                'Choose how often you want to be reminded to track your prayers',
+                'Choose how often you want to be reminded for reflections',
                 [
                   { text: '2 times a day', onPress: async () => {
                     setReminderMinutes(720); // 12 hours
@@ -206,7 +206,7 @@ export default function SettingsScreen() {
           <SettingItem
             icon={Trash2}
             title="Clear All Data"
-            subtitle="Delete all prayers, reflections, and settings"
+            subtitle="Delete all reflections and settings"
             onPress={handleClearData}
           />
         </View>
