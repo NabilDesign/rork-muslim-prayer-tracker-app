@@ -1,72 +1,24 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
-  Alert,
   RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
-import { Sunrise, Sun, CloudSun, Sunset, Moon } from 'lucide-react-native';
-import { usePrayerStore } from '@/src/store/app-store';
-import { PrayerCard } from '@/src/components/PrayerCard';
-
+import { useAppStore } from '@/src/store/app-store';
 import { StatsOverview } from '@/src/components/StatsOverview';
 
-
-const prayerIcons = {
-  Fajr: Sunrise,
-  Dhuhr: Sun,
-  Asr: CloudSun,
-  Maghrib: Sunset,
-  Isha: Moon,
-};
-
 export default function TodayScreen() {
-  const {
-    todaysPrayers,
-    initializeTodaysPrayers,
-    markPrayer,
-    addPrayerNote,
-    getStreakDays,
-    getOnTimeRate,
-  } = usePrayerStore();
-  
   const [refreshing, setRefreshing] = useState(false);
-
-
-  useEffect(() => {
-    initializeTodaysPrayers();
-  }, [initializeTodaysPrayers]);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await initializeTodaysPrayers();
+    // Add any refresh logic here if needed
     setRefreshing(false);
   };
-
-  const handleMarkPrayer = (prayerName: string, status: 'on-time' | 'late' | 'missed') => {
-    markPrayer(prayerName, status);
-  };
-
-  const handleAddNote = (prayerName: string, note: string) => {
-    addPrayerNote(prayerName, note);
-  };
-
-  const handleMarkAllOnTime = () => {
-    todaysPrayers.forEach(prayer => {
-      if (prayer.status === 'pending') {
-        markPrayer(prayer.name, 'on-time');
-      }
-    });
-  };
-
-  const streakDays = getStreakDays();
-  const onTimeRate = getOnTimeRate();
 
   const today = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
@@ -84,7 +36,6 @@ export default function TodayScreen() {
         <View style={styles.headerContent}>
           <Text style={styles.greeting}>As-salamu alaykum</Text>
           <Text style={styles.date}>{today}</Text>
-          <StatsOverview streakDays={streakDays} onTimeRate={onTimeRate} />
         </View>
         <View style={styles.headerDecoration}>
           <View style={styles.decorativeCircle1} />
@@ -99,32 +50,11 @@ export default function TodayScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <View style={styles.prayersSection}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Today's Prayers</Text>
-            {todaysPrayers.some(prayer => prayer.status === 'pending') && (
-              <TouchableOpacity 
-                style={styles.allOnTimeButton}
-                onPress={handleMarkAllOnTime}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.allOnTimeText}>All On Time</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {todaysPrayers.map((prayer) => {
-            const IconComponent = prayerIcons[prayer.name as keyof typeof prayerIcons];
-            return (
-              <PrayerCard
-                key={prayer.name}
-                prayer={prayer}
-                icon={IconComponent}
-                onMarkPrayer={handleMarkPrayer}
-                onAddNote={handleAddNote}
-              />
-            );
-          })}
+        <View style={styles.mainSection}>
+          <Text style={styles.sectionTitle}>Welcome to your Islamic App</Text>
+          <Text style={styles.sectionDescription}>
+            Use the tabs below to access Dhikr, Hadith, and other features.
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -203,36 +133,25 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 24,
     backgroundColor: '#F8FAFC',
   },
-  prayersSection: {
+  mainSection: {
     padding: 20,
     paddingTop: 32,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    justifyContent: 'center',
+    minHeight: 200,
   },
   sectionTitle: {
     fontSize: 22,
     fontWeight: '800',
     color: '#1E293B',
     letterSpacing: -0.5,
+    textAlign: 'center',
+    marginBottom: 16,
   },
-  allOnTimeButton: {
-    backgroundColor: '#10B981',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  allOnTimeText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
+  sectionDescription: {
+    fontSize: 16,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 24,
   },
 });

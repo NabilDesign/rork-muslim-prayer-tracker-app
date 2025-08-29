@@ -1,34 +1,30 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { TrendingUp, Target } from 'lucide-react-native';
+import { Heart, BookOpen } from 'lucide-react-native';
 
 interface StatsOverviewProps {
-  streakDays: number;
-  onTimeRate: number;
+  // Remove prayer-specific props, add generic ones if needed
 }
 
-export const StatsOverview: React.FC<StatsOverviewProps> = ({
-  streakDays,
-  onTimeRate,
-}) => {
+export const StatsOverview: React.FC<StatsOverviewProps> = () => {
   return (
     <View style={styles.container}>
       <View style={styles.statItem}>
         <View style={styles.statIcon}>
-          <TrendingUp color="#10B981" size={16} />
+          <Heart color="#F59E0B" size={16} />
         </View>
-        <Text style={styles.statValue}>{streakDays}</Text>
-        <Text style={styles.statLabel}>Day Streak</Text>
+        <Text style={styles.statValue}>∞</Text>
+        <Text style={styles.statLabel}>Dhikr</Text>
       </View>
       
       <View style={styles.separator} />
       
       <View style={styles.statItem}>
         <View style={styles.statIcon}>
-          <Target color="#3B82F6" size={16} />
+          <BookOpen color="#10B981" size={16} />
         </View>
-        <Text style={styles.statValue}>{Math.round(onTimeRate * 100)}%</Text>
-        <Text style={styles.statLabel}>On Time</Text>
+        <Text style={styles.statValue}>Daily</Text>
+        <Text style={styles.statLabel}>Hadith</Text>
       </View>
     </View>
   );
