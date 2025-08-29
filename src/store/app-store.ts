@@ -149,16 +149,30 @@ export const usePrayerStore = create<PrayerStore>((set, get) => ({
         : prayer
     );
 
-    const updatedRecords = prayerRecords.map(record =>
-      record.date === today
-        ? { ...record, prayers: updatedTodaysPrayers }
-        : record
-    );
+    // Ensure we have a record for today
+    let updatedRecords = [...prayerRecords];
+    const existingRecordIndex = updatedRecords.findIndex(record => record.date === today);
+    
+    if (existingRecordIndex >= 0) {
+      // Update existing record
+      updatedRecords[existingRecordIndex] = {
+        ...updatedRecords[existingRecordIndex],
+        prayers: updatedTodaysPrayers
+      };
+    } else {
+      // Create new record for today
+      updatedRecords.push({
+        date: today,
+        prayers: updatedTodaysPrayers
+      });
+    }
 
-    set({ 
-      todaysPrayers: updatedTodaysPrayers,
-      prayerRecords: updatedRecords 
-    });
+    // Force a complete state update to ensure reactivity
+    set(state => ({ 
+      ...state,
+      todaysPrayers: [...updatedTodaysPrayers], // Create new array reference
+      prayerRecords: [...updatedRecords] // Create new array reference
+    }));
 
     // Save to storage
     AsyncStorage.setItem(STORAGE_KEYS.PRAYER_RECORDS, JSON.stringify(updatedRecords));
@@ -181,16 +195,30 @@ export const usePrayerStore = create<PrayerStore>((set, get) => ({
       prayer.name === prayerName ? { ...prayer, note } : prayer
     );
 
-    const updatedRecords = prayerRecords.map(record =>
-      record.date === today
-        ? { ...record, prayers: updatedTodaysPrayers }
-        : record
-    );
+    // Ensure we have a record for today
+    let updatedRecords = [...prayerRecords];
+    const existingRecordIndex = updatedRecords.findIndex(record => record.date === today);
+    
+    if (existingRecordIndex >= 0) {
+      // Update existing record
+      updatedRecords[existingRecordIndex] = {
+        ...updatedRecords[existingRecordIndex],
+        prayers: updatedTodaysPrayers
+      };
+    } else {
+      // Create new record for today
+      updatedRecords.push({
+        date: today,
+        prayers: updatedTodaysPrayers
+      });
+    }
 
-    set({ 
-      todaysPrayers: updatedTodaysPrayers,
-      prayerRecords: updatedRecords 
-    });
+    // Force a complete state update to ensure reactivity
+    set(state => ({ 
+      ...state,
+      todaysPrayers: [...updatedTodaysPrayers], // Create new array reference
+      prayerRecords: [...updatedRecords] // Create new array reference
+    }));
 
     AsyncStorage.setItem(STORAGE_KEYS.PRAYER_RECORDS, JSON.stringify(updatedRecords));
   },

@@ -50,6 +50,12 @@ export default function AgendaScreen() {
   };
 
   const monthData = useMemo(() => {
+    console.log('Calendar monthData recalculating...', {
+      todaysPrayersLength: todaysPrayers.length,
+      prayerRecordsLength: prayerRecords.length,
+      todaysPrayers: todaysPrayers.map(p => ({ name: p.name, status: p.status }))
+    });
+    
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
     const firstDay = new Date(year, month, 1);
