@@ -61,7 +61,15 @@ export default function AgendaScreen() {
     
     for (let date = new Date(firstDay); date <= lastDay; date.setDate(date.getDate() + 1)) {
       const dateStr = date.toISOString().split('T')[0];
-      const record = prayerRecords.find(r => r.date === dateStr);
+      let record = prayerRecords.find(r => r.date === dateStr);
+      
+      // For today, use todaysPrayers if it exists and has more recent data
+      if (dateStr === todayStr && todaysPrayers.length > 0) {
+        record = {
+          date: dateStr,
+          prayers: todaysPrayers
+        };
+      }
       
       let completed = 0;
       const total = 5;
@@ -96,7 +104,7 @@ export default function AgendaScreen() {
     }
     
     return days;
-  }, [currentMonth, prayerRecords]);
+  }, [currentMonth, prayerRecords, todaysPrayers]);
 
   const navigateMonth = (direction: 'prev' | 'next') => {
     setCurrentMonth(prev => {
@@ -292,6 +300,14 @@ export default function AgendaScreen() {
               const today = new Date().toISOString().split('T')[0];
               const isToday = selectedDate === today;
               let record = prayerRecords.find(r => r.date === selectedDate);
+              
+              // For today, use todaysPrayers if it exists and has more recent data
+              if (isToday && todaysPrayers.length > 0) {
+                record = {
+                  date: selectedDate,
+                  prayers: todaysPrayers
+                };
+              }
               
               // If no record exists, create a default one for the selected date
               if (!record) {
