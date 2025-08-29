@@ -30,11 +30,23 @@ export interface Settings {
   } | null;
 }
 
+export type PrayerStatus = 'prayed' | 'late' | 'missed' | null;
+
+export interface PrayerData {
+  status: PrayerStatus;
+  comment: string;
+}
+
+export interface DayPrayerData {
+  [prayerId: string]: PrayerData;
+}
+
 interface AppStore {
   // State
   reflections: Reflection[];
   badges: Badge[];
   settings: Settings;
+  prayerData: { [date: string]: DayPrayerData };
   
   // Actions
   addReflection: (reflection: Omit<Reflection, 'id' | 'createdAt' | 'updatedAt'>) => void;
@@ -42,6 +54,12 @@ interface AppStore {
   deleteReflection: (id: string) => void;
   updateSettings: (updates: Partial<Settings>) => void;
   clearAllData: () => void;
+  
+  // Prayer Actions
+  updatePrayerStatus: (prayerId: string, status: PrayerStatus) => void;
+  addPrayerComment: (prayerId: string, comment: string) => void;
+  getTodaysPrayers: () => DayPrayerData;
+  getPrayerDataForDate: (date: string) => DayPrayerData;
   
   // Computed values
   getBadges: () => Badge[];
@@ -51,6 +69,7 @@ const STORAGE_KEYS = {
   REFLECTIONS: 'reflections',
   BADGES: 'badges',
   SETTINGS: 'settings',
+  PRAYER_DATA: 'prayerData',
 };
 
 const defaultSettings: Settings = {
@@ -64,6 +83,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
   reflections: [],
   badges: [],
   settings: defaultSettings,
+  prayerData: {},
 
 
 
@@ -115,6 +135,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       reflections: [],
       badges: [],
       settings: defaultSettings,
+      prayerData: {},
     });
     
     Object.values(STORAGE_KEYS).forEach(key => {
@@ -128,15 +149,71 @@ export const useAppStore = create<AppStore>((set, get) => ({
   getBadges: () => {
     return get().badges;
   },
+
+  updatePrayerStatus: (prayerId, status) => {
+    const today = new Date().toISOString().split('T')[0];
+    const currentData = get().prayerData;
+    const todayData = currentData[today] || {};
+    
+    const updatedTodayData = {
+      ...todayData,
+      [prayerId]: {
+        ...todayData[prayerId],
+        status,
+        comment: todayData[prayerId]?.comment || '',
+      },
+    };
+    
+    const updatedPrayerData = {
+      ...currentData,
+      [today]: updatedTodayData,
+    };
+    
+    set({ prayerData: updatedPrayerData });
+    AsyncStorage.setItem(STORAGE_KEYS.PRAYER_DATA, JSON.stringify(updatedPrayerData));
+  },
+
+  addPrayerComment: (prayerId, comment) => {
+    const today = new Date().toISOString().split('T')[0];
+    const currentData = get().prayerData;
+    const todayData = currentData[today] || {};
+    
+    const updatedTodayData = {
+      ...todayData,
+      [prayerId]: {
+        ...todayData[prayerId],
+        status: todayData[prayerId]?.status || null,
+        comment,
+      },
+    };
+    
+    const updatedPrayerData = {
+      ...currentData,
+      [today]: updatedTodayData,
+    };
+    
+    set({ prayerData: updatedPrayerData });
+    AsyncStorage.setItem(STORAGE_KEYS.PRAYER_DATA, JSON.stringify(updatedPrayerData));
+  },
+
+  getTodaysPrayers: () => {
+    const today = new Date().toISOString().split('T')[0];
+    return get().prayerData[today] || {};
+  },
+
+  getPrayerDataForDate: (date) => {
+    return get().prayerData[date] || {};
+  },
 }));
 
 // Initialize store from AsyncStorage
 const initializeStore = async () => {
   try {
-    const [reflections, badges, settings] = await Promise.all([
+    const [reflections, badges, settings, prayerData] = await Promise.all([
       AsyncStorage.getItem(STORAGE_KEYS.REFLECTIONS),
       AsyncStorage.getItem(STORAGE_KEYS.BADGES),
       AsyncStorage.getItem(STORAGE_KEYS.SETTINGS),
+      AsyncStorage.getItem(STORAGE_KEYS.PRAYER_DATA),
     ]);
 
     const parsedSettings = settings ? { ...defaultSettings, ...JSON.parse(settings) } : defaultSettings;
@@ -145,6 +222,7 @@ const initializeStore = async () => {
       reflections: reflections ? JSON.parse(reflections) : [],
       badges: badges ? JSON.parse(badges) : [],
       settings: parsedSettings,
+      prayerData: prayerData ? JSON.parse(prayerData) : {},
     });
     
     // Initialize notifications with current settings
