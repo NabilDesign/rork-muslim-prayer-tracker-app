@@ -1,67 +1,68 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  TextInput,
-  Alert,
+  Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Plus, BookOpen, Calendar, Edit3 } from 'lucide-react-native';
-import { usePrayerStore } from '@/src/store/app-store';
-import { ReflectionCard } from '@/src/components/ReflectionCard';
+import { BookOpen, Calendar, Share2, ChevronLeft, ChevronRight, Star } from 'lucide-react-native';
+import { getHadithOfTheDay, getHadithByDate, type Hadith } from '@/src/data/hadiths';
 
-export default function JourneyScreen() {
-  const { reflections, addReflection, updateReflection, deleteReflection } = usePrayerStore();
-  const [showEditor, setShowEditor] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
+export default function HadithScreen() {
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
+  const [currentHadith, setCurrentHadith] = useState<Hadith>(getHadithOfTheDay());
+  const [isToday, setIsToday] = useState<boolean>(true);
 
-  const handleSave = () => {
-    if (!title.trim() || !content.trim()) {
-      Alert.alert('Error', 'Please fill in both title and content');
-      return;
-    }
-
-    if (editingId) {
-      updateReflection(editingId, { title: title.trim(), content: content.trim() });
+  useEffect(() => {
+    const today = new Date();
+    const isCurrentDateToday = currentDate.toDateString() === today.toDateString();
+    setIsToday(isCurrentDateToday);
+    
+    if (isCurrentDateToday) {
+      setCurrentHadith(getHadithOfTheDay());
     } else {
-      addReflection({ title: title.trim(), content: content.trim() });
+      setCurrentHadith(getHadithByDate(currentDate));
     }
+  }, [currentDate]);
 
-    setTitle('');
-    setContent('');
-    setEditingId(null);
-    setShowEditor(false);
+  const goToPreviousDay = () => {
+    const previousDay = new Date(currentDate);
+    previousDay.setDate(currentDate.getDate() - 1);
+    setCurrentDate(previousDay);
   };
 
-  const handleEdit = (reflection: any) => {
-    setTitle(reflection.title);
-    setContent(reflection.content);
-    setEditingId(reflection.id);
-    setShowEditor(true);
+  const goToNextDay = () => {
+    const nextDay = new Date(currentDate);
+    nextDay.setDate(currentDate.getDate() + 1);
+    setCurrentDate(nextDay);
   };
 
-  const handleCancel = () => {
-    setTitle('');
-    setContent('');
-    setEditingId(null);
-    setShowEditor(false);
+  const goToToday = () => {
+    setCurrentDate(new Date());
   };
 
-  const handleDelete = (id: string) => {
-    Alert.alert(
-      'Delete Reflection',
-      'Are you sure you want to delete this reflection?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: () => deleteReflection(id) },
-      ]
-    );
+  const shareHadith = async () => {
+    try {
+      await Share.share({
+        message: `${currentHadith.text}\n\n— ${currentHadith.narrator}\nSource: ${currentHadith.source}`,
+        title: 'Hadith of the Day',
+      });
+    } catch (error) {
+      console.error('Error sharing hadith:', error);
+    }
+  };
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
   };
 
   return (
@@ -72,8 +73,8 @@ export default function JourneyScreen() {
       >
         <View style={styles.headerContent}>
           <BookOpen color="#FFFFFF" size={32} />
-          <Text style={styles.headerTitle}>Reflections</Text>
-          <Text style={styles.headerSubtitle}>Document your spiritual journey</Text>
+          <Text style={styles.headerTitle}>Hadith of the Day</Text>
+          <Text style={styles.headerSubtitle}>Daily wisdom from Prophet Muhammad (ﷺ)</Text>
         </View>
         <View style={styles.headerDecoration}>
           <View style={styles.decorativeCircle1} />
@@ -81,83 +82,59 @@ export default function JourneyScreen() {
         </View>
       </LinearGradient>
 
-      {showEditor ? (
-        <View style={styles.editor}>
-          <View style={styles.editorHeader}>
-            <Text style={styles.editorTitle}>
-              {editingId ? 'Edit Reflection' : 'New Reflection'}
-            </Text>
-            <View style={styles.editorActions}>
-              <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-                <Text style={styles.saveButtonText}>Save</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-          
-          <TextInput
-            style={styles.titleInput}
-            placeholder="Reflection title..."
-            value={title}
-            onChangeText={setTitle}
-            maxLength={100}
-          />
-          
-          <TextInput
-            style={styles.contentInput}
-            placeholder="Share your thoughts, insights, or prayers..."
-            value={content}
-            onChangeText={setContent}
-            multiline
-            textAlignVertical="top"
-          />
-        </View>
-      ) : (
-        <ScrollView style={styles.content}>
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>My Reflections</Text>
-              <TouchableOpacity
-                style={styles.addButton}
-                onPress={() => setShowEditor(true)}
-              >
-                <Plus color="#FFFFFF" size={20} />
-                <Text style={styles.addButtonText}>Add</Text>
-              </TouchableOpacity>
-            </View>
-
-            {reflections.length === 0 ? (
-              <View style={styles.emptyState}>
-                <BookOpen color="#9CA3AF" size={48} />
-                <Text style={styles.emptyTitle}>Start Your Journey</Text>
-                <Text style={styles.emptySubtitle}>
-                  Write your first reflection to begin documenting your spiritual growth
-                </Text>
-                <TouchableOpacity
-                  style={styles.emptyButton}
-                  onPress={() => setShowEditor(true)}
-                >
-                  <Edit3 color="#2D5016" size={16} />
-                  <Text style={styles.emptyButtonText}>Write Reflection</Text>
+      <ScrollView style={styles.content}>
+        <View style={styles.section}>
+          {/* Date Navigation */}
+          <View style={styles.dateNavigation}>
+            <TouchableOpacity style={styles.navButton} onPress={goToPreviousDay}>
+              <ChevronLeft color="#6B7280" size={20} />
+            </TouchableOpacity>
+            
+            <View style={styles.dateContainer}>
+              <Text style={styles.dateText}>{formatDate(currentDate)}</Text>
+              {!isToday && (
+                <TouchableOpacity style={styles.todayButton} onPress={goToToday}>
+                  <Text style={styles.todayButtonText}>Today</Text>
                 </TouchableOpacity>
-              </View>
-            ) : (
-              <View style={styles.reflectionsList}>
-                {reflections.map((reflection) => (
-                  <ReflectionCard
-                    key={reflection.id}
-                    reflection={reflection}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                  />
-                ))}
-              </View>
-            )}
+              )}
+            </View>
+            
+            <TouchableOpacity style={styles.navButton} onPress={goToNextDay}>
+              <ChevronRight color="#6B7280" size={20} />
+            </TouchableOpacity>
           </View>
-        </ScrollView>
-      )}
+
+          {/* Hadith Card */}
+          <View style={styles.hadithCard}>
+            <View style={styles.hadithHeader}>
+              <View style={styles.categoryBadge}>
+                <Star color="#F59E0B" size={16} fill="#F59E0B" />
+                <Text style={styles.categoryText}>{currentHadith.category}</Text>
+              </View>
+              <TouchableOpacity style={styles.shareButton} onPress={shareHadith}>
+                <Share2 color="#6B7280" size={20} />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.hadithContent}>
+              <Text style={styles.hadithText}>"{currentHadith.text}"</Text>
+              
+              <View style={styles.hadithFooter}>
+                <Text style={styles.narratorText}>— {currentHadith.narrator}</Text>
+                <Text style={styles.sourceText}>Source: {currentHadith.source}</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Reflection Section */}
+          <View style={styles.reflectionSection}>
+            <Text style={styles.reflectionTitle}>Reflect on this Hadith</Text>
+            <Text style={styles.reflectionPrompt}>
+              How can you apply this wisdom in your daily life? Take a moment to contemplate the deeper meaning and consider how it relates to your spiritual journey.
+            </Text>
+          </View>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -217,6 +194,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: 'rgba(255, 255, 255, 0.8)',
     fontWeight: '500',
+    textAlign: 'center',
   },
   content: {
     flex: 1,
@@ -229,37 +207,53 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 32,
   },
-  sectionHeader: {
+  dateNavigation: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1F2937',
-  },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#2D5016',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-  },
-  addButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-    marginLeft: 4,
-  },
-  editor: {
-    flex: 1,
+    marginBottom: 24,
     backgroundColor: '#FFFFFF',
-    margin: 20,
-    marginTop: 32,
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  navButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: '#F8FAFC',
+  },
+  dateContainer: {
+    flex: 1,
+    alignItems: 'center',
+    marginHorizontal: 16,
+  },
+  dateText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1F2937',
+    textAlign: 'center',
+  },
+  todayButton: {
+    marginTop: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    backgroundColor: '#2D5016',
+    borderRadius: 12,
+  },
+  todayButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  hadithCard: {
+    backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 24,
+    marginBottom: 24,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.12,
@@ -268,91 +262,76 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(148, 163, 184, 0.1)',
   },
-  editorHeader: {
+  hadithHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
   },
-  editorTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1F2937',
-  },
-  editorActions: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  cancelButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-  },
-  cancelButtonText: {
-    color: '#6B7280',
-    fontWeight: '600',
-  },
-  saveButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    backgroundColor: '#2D5016',
-  },
-  saveButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  titleInput: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1F2937',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-    paddingVertical: 12,
-    marginBottom: 20,
-  },
-  contentInput: {
-    flex: 1,
-    fontSize: 16,
-    color: '#374151',
-    lineHeight: 24,
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: 60,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1F2937',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptySubtitle: {
-    fontSize: 16,
-    color: '#6B7280',
-    textAlign: 'center',
-    marginBottom: 24,
-    paddingHorizontal: 20,
-  },
-  emptyButton: {
+  categoryBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F0FDF4',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 20,
+  },
+  categoryText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#92400E',
+    marginLeft: 4,
+  },
+  shareButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: '#F8FAFC',
+  },
+  hadithContent: {
+    gap: 20,
+  },
+  hadithText: {
+    fontSize: 18,
+    lineHeight: 28,
+    color: '#1F2937',
+    fontWeight: '500',
+    fontStyle: 'italic',
+    textAlign: 'center',
+  },
+  hadithFooter: {
+    alignItems: 'center',
+    gap: 8,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+  },
+  narratorText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2D5016',
+  },
+  sourceText: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  reflectionSection: {
+    backgroundColor: '#F0FDF4',
+    borderRadius: 16,
+    padding: 20,
     borderWidth: 1,
     borderColor: '#BBF7D0',
   },
-  emptyButtonText: {
+  reflectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
     color: '#2D5016',
-    fontWeight: '600',
-    marginLeft: 8,
+    marginBottom: 12,
   },
-  reflectionsList: {
-    gap: 16,
+  reflectionPrompt: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#374151',
+    fontWeight: '500',
   },
 });
