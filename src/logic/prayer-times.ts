@@ -63,7 +63,8 @@ export const getCurrentPrayerTimes = async (coordinates?: LocationCoordinates): 
   } catch (error) {
     console.error('Error calculating prayer times:', error);
     
-    // More accurate fallback times for Belgium based on season
+    // Fallback calculation
+    console.log('Using fallback prayer times calculation');
     const now = new Date();
     const month = now.getMonth();
     
@@ -99,8 +100,16 @@ export const getCurrentPrayerTimes = async (coordinates?: LocationCoordinates): 
 
 export const getQiblaDirection = (coordinates?: LocationCoordinates): number => {
   const location = coordinates || DEFAULT_BELGIUM_COORDINATES;
-  const coords = new Coordinates(location.latitude, location.longitude);
-  return Qibla(coords);
+  
+  try {
+    const coords = new Coordinates(location.latitude, location.longitude);
+    return Qibla(coords);
+  } catch (error) {
+    console.error('Error calculating Qibla direction:', error);
+    // Fallback: approximate Qibla direction for Belgium (towards Mecca)
+    // Belgium to Mecca is approximately 120 degrees (southeast)
+    return 120;
+  }
 };
 
 export const getNextPrayer = (prayerTimes: PrayerTimes): { name: string; time: string } | null => {
