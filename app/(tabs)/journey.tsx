@@ -72,8 +72,8 @@ export default function JourneyScreen() {
       >
         <View style={styles.headerContent}>
           <BookOpen color="#FFFFFF" size={32} />
-          <Text style={styles.headerTitle}>Spiritual Journey</Text>
-          <Text style={styles.headerSubtitle}>Reflect on your path</Text>
+          <Text style={styles.headerTitle}>Reflections</Text>
+          <Text style={styles.headerSubtitle}>Document your spiritual journey</Text>
         </View>
         <View style={styles.headerDecoration}>
           <View style={styles.decorativeCircle1} />
