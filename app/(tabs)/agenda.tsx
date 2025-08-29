@@ -96,7 +96,7 @@ export default function AgendaScreen() {
     }
     
     return days;
-  }, [currentMonth, prayerRecords, todaysPrayers]);
+  }, [currentMonth, prayerRecords]);
 
   const navigateMonth = (direction: 'prev' | 'next') => {
     setCurrentMonth(prev => {
@@ -181,7 +181,7 @@ export default function AgendaScreen() {
             {emptyDays.map((_, index) => (
               <View key={`empty-${index}`} style={styles.emptyDay} />
             ))}
-            {monthData.map((day, index) => {
+            {monthData.map((day) => {
               const StatusIcon = getStatusIcon(day.status);
               const dayNumber = new Date(day.date).getDate();
               
@@ -298,16 +298,16 @@ export default function AgendaScreen() {
                 record = {
                   date: selectedDate,
                   prayers: [
-                    { name: 'Fajr', time: '05:30', status: 'pending' },
-                    { name: 'Dhuhr', time: '12:30', status: 'pending' },
-                    { name: 'Asr', time: '15:30', status: 'pending' },
-                    { name: 'Maghrib', time: '18:30', status: 'pending' },
-                    { name: 'Isha', time: '20:00', status: 'pending' },
+                    { name: 'Fajr', status: 'pending' },
+                    { name: 'Dhuhr', status: 'pending' },
+                    { name: 'Asr', status: 'pending' },
+                    { name: 'Maghrib', status: 'pending' },
+                    { name: 'Isha', status: 'pending' },
                   ],
                 };
               }
               
-              return record.prayers.map((prayer) => {
+              return record?.prayers.map((prayer) => {
                 const IconComponent = prayerIcons[prayer.name as keyof typeof prayerIcons];
                 return (
                   <PrayerCard
@@ -437,6 +437,7 @@ const styles = StyleSheet.create({
   calendarGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    minHeight: 240,
   },
   emptyDay: {
     width: `${100/7}%`,
@@ -444,7 +445,7 @@ const styles = StyleSheet.create({
   },
   dayContainer: {
     width: `${100/7}%`,
-    aspectRatio: 1,
+    height: 60,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 2,
