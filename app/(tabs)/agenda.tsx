@@ -63,12 +63,26 @@ export default function AgendaScreen() {
       const dateStr = date.toISOString().split('T')[0];
       let record = prayerRecords.find(r => r.date === dateStr);
       
-      // For today, use todaysPrayers if it exists and has more recent data
-      if (dateStr === todayStr && todaysPrayers.length > 0) {
-        record = {
-          date: dateStr,
-          prayers: todaysPrayers
-        };
+      // For today, always prioritize todaysPrayers for the most up-to-date data
+      if (dateStr === todayStr) {
+        if (todaysPrayers.length > 0) {
+          record = {
+            date: dateStr,
+            prayers: todaysPrayers
+          };
+        } else if (!record) {
+          // If no todaysPrayers and no record, create default pending prayers
+          record = {
+            date: dateStr,
+            prayers: [
+              { name: 'Fajr', status: 'pending' },
+              { name: 'Dhuhr', status: 'pending' },
+              { name: 'Asr', status: 'pending' },
+              { name: 'Maghrib', status: 'pending' },
+              { name: 'Isha', status: 'pending' },
+            ]
+          };
+        }
       }
       
       let completed = 0;
@@ -301,16 +315,28 @@ export default function AgendaScreen() {
               const isToday = selectedDate === today;
               let record = prayerRecords.find(r => r.date === selectedDate);
               
-              // For today, use todaysPrayers if it exists and has more recent data
-              if (isToday && todaysPrayers.length > 0) {
-                record = {
-                  date: selectedDate,
-                  prayers: todaysPrayers
-                };
-              }
-              
-              // If no record exists, create a default one for the selected date
-              if (!record) {
+              // For today, always prioritize todaysPrayers for the most up-to-date data
+              if (isToday) {
+                if (todaysPrayers.length > 0) {
+                  record = {
+                    date: selectedDate,
+                    prayers: todaysPrayers
+                  };
+                } else if (!record) {
+                  // If no todaysPrayers and no record, create default pending prayers
+                  record = {
+                    date: selectedDate,
+                    prayers: [
+                      { name: 'Fajr', status: 'pending' },
+                      { name: 'Dhuhr', status: 'pending' },
+                      { name: 'Asr', status: 'pending' },
+                      { name: 'Maghrib', status: 'pending' },
+                      { name: 'Isha', status: 'pending' },
+                    ],
+                  };
+                }
+              } else if (!record) {
+                // For non-today dates, create default record if none exists
                 record = {
                   date: selectedDate,
                   prayers: [
