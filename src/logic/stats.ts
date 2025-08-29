@@ -39,23 +39,38 @@ export const calculateStats = (prayerRecords: PrayerRecord[]): Stats => {
     new Date(b.date).getTime() - new Date(a.date).getTime()
   );
 
-  // Calculate current streak
+  // Calculate current streak (consecutive days only)
   let currentStreak = 0;
+  let expectedDate = new Date();
+  expectedDate.setHours(0, 0, 0, 0); // Start from today
+  
   for (const record of sortedRecords) {
+    const recordDate = new Date(record.date);
+    recordDate.setHours(0, 0, 0, 0);
+    
+    // Check if this record is for the expected consecutive date
+    if (recordDate.getTime() !== expectedDate.getTime()) {
+      // If it's not consecutive, stop counting
+      break;
+    }
+    
     const completedCount = record.prayers.filter(p => 
       p.status === 'on-time' || p.status === 'late'
     ).length;
     
     if (completedCount === 5) {
       currentStreak++;
+      // Move to the previous day for next iteration
+      expectedDate.setDate(expectedDate.getDate() - 1);
     } else {
       break;
     }
   }
 
-  // Calculate best streak
+  // Calculate best streak (consecutive days only)
   let bestStreak = 0;
   let tempStreak = 0;
+  let lastDate: Date | null = null;
   
   // Sort by date (oldest first for best streak calculation)
   const chronologicalRecords = [...prayerRecords].sort((a, b) => 
@@ -63,15 +78,36 @@ export const calculateStats = (prayerRecords: PrayerRecord[]): Stats => {
   );
 
   for (const record of chronologicalRecords) {
+    const recordDate = new Date(record.date);
+    recordDate.setHours(0, 0, 0, 0);
+    
     const completedCount = record.prayers.filter(p => 
       p.status === 'on-time' || p.status === 'late'
     ).length;
     
     if (completedCount === 5) {
-      tempStreak++;
+      // Check if this is consecutive to the last date
+      if (lastDate === null) {
+        // First completed day
+        tempStreak = 1;
+      } else {
+        const expectedDate = new Date(lastDate);
+        expectedDate.setDate(expectedDate.getDate() + 1);
+        
+        if (recordDate.getTime() === expectedDate.getTime()) {
+          // Consecutive day
+          tempStreak++;
+        } else {
+          // Not consecutive, start new streak
+          tempStreak = 1;
+        }
+      }
+      
       bestStreak = Math.max(bestStreak, tempStreak);
+      lastDate = recordDate;
     } else {
       tempStreak = 0;
+      lastDate = null;
     }
   }
 
