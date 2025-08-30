@@ -130,7 +130,7 @@ export default function HadithScreen() {
           <View style={styles.reflectionSection}>
             <Text style={styles.reflectionTitle}>Reflect on this Hadith</Text>
             <Text style={styles.reflectionPrompt}>
-              How can you apply this wisdom in your daily life? Take a moment to contemplate the deeper meaning and consider how it relates to your spiritual journey.
+              How can you apply this wisdom in your daily life?
             </Text>
           </View>
         </View>
