@@ -7,10 +7,14 @@ import {
   TouchableOpacity,
   Modal,
   Dimensions,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Calendar, ChevronLeft, ChevronRight, X, Check, Clock } from 'lucide-react-native';
+import { Calendar, ChevronLeft, ChevronRight, X, Check, Clock, Edit3, MessageSquare, BarChart3, ArrowLeft, ArrowRight, Home } from 'lucide-react-native';
 import { useAppStore } from '@/src/store/app-store';
 
 const { width } = Dimensions.get('window');
@@ -30,10 +34,13 @@ const MONTHS = [
 ];
 
 export default function AgendaScreen() {
-  const { prayerData, getPrayerDataForDate } = useAppStore();
+  const { prayerData, getPrayerDataForDate, updatePrayerStatus, addPrayerComment } = useAppStore();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [editingPrayer, setEditingPrayer] = useState<string | null>(null);
+  const [tempComment, setTempComment] = useState('');
+  const [showStats, setShowStats] = useState(false);
 
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
@@ -111,6 +118,108 @@ export default function AgendaScreen() {
     setModalVisible(true);
   };
 
+  const goToToday = () => {
+    const today = new Date();
+    setCurrentDate(today);
+    setSelectedDate(today);
+    setModalVisible(true);
+  };
+
+  const goToPreviousDay = () => {
+    if (selectedDate) {
+      const prevDay = new Date(selectedDate);
+      prevDay.setDate(prevDay.getDate() - 1);
+      setSelectedDate(prevDay);
+      setCurrentDate(new Date(prevDay.getFullYear(), prevDay.getMonth()));
+    }
+  };
+
+  const goToNextDay = () => {
+    if (selectedDate) {
+      const nextDay = new Date(selectedDate);
+      nextDay.setDate(nextDay.getDate() + 1);
+      setSelectedDate(nextDay);
+      setCurrentDate(new Date(nextDay.getFullYear(), nextDay.getMonth()));
+    }
+  };
+
+  const handlePrayerStatusChange = (prayerId: string, status: 'prayed' | 'late' | 'missed' | null) => {
+    if (!selectedDate) return;
+    
+    const dateStr = selectedDate.toISOString().split('T')[0];
+    const currentData = getPrayerDataForDate(dateStr);
+    const currentStatus = currentData[prayerId]?.status;
+    
+    if (currentStatus === status) {
+      updatePrayerStatusForDate(dateStr, prayerId, null);
+    } else {
+      updatePrayerStatusForDate(dateStr, prayerId, status);
+    }
+  };
+
+  const updatePrayerStatusForDate = (dateStr: string, prayerId: string, status: 'prayed' | 'late' | 'missed' | null) => {
+    // This is a simplified version - in a real app you'd want to extend the store
+    // For now, we'll only allow editing today's prayers
+    const today = new Date().toISOString().split('T')[0];
+    if (dateStr === today) {
+      updatePrayerStatus(prayerId, status);
+    } else {
+      Alert.alert('Notice', 'You can only edit today\'s prayers. Past prayers are locked for accuracy.');
+    }
+  };
+
+  const handleEditComment = (prayerId: string) => {
+    if (!selectedDate) return;
+    
+    const dateStr = selectedDate.toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0];
+    
+    if (dateStr !== today) {
+      Alert.alert('Notice', 'You can only edit today\'s prayer comments.');
+      return;
+    }
+    
+    const dayData = getPrayerDataForDate(dateStr);
+    setEditingPrayer(prayerId);
+    setTempComment(dayData[prayerId]?.comment || '');
+  };
+
+  const saveComment = () => {
+    if (editingPrayer) {
+      addPrayerComment(editingPrayer, tempComment);
+    }
+    setEditingPrayer(null);
+    setTempComment('');
+  };
+
+  const getMonthStats = () => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const daysInMonth = getDaysInMonth(currentDate);
+    
+    let totalPrayers = 0;
+    let prayedCount = 0;
+    let lateCount = 0;
+    let missedCount = 0;
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
+      const dateStr = date.toISOString().split('T')[0];
+      const dayData = prayerData[dateStr];
+      
+      if (dayData) {
+        Object.values(dayData).forEach((prayer: any) => {
+          totalPrayers++;
+          if (prayer.status === 'prayed') prayedCount++;
+          else if (prayer.status === 'late') lateCount++;
+          else if (prayer.status === 'missed') missedCount++;
+        });
+      }
+    }
+    
+    return { totalPrayers, prayedCount, lateCount, missedCount };
+  };
+
   const getSelectedDateData = () => {
     if (!selectedDate) return {};
     const dateStr = selectedDate.toISOString().split('T')[0];
@@ -151,13 +260,57 @@ export default function AgendaScreen() {
             <TouchableOpacity onPress={handlePreviousMonth} style={styles.navButton}>
               <ChevronLeft size={24} color="#1E293B" />
             </TouchableOpacity>
-            <Text style={styles.monthTitle}>
-              {MONTHS[currentMonth]} {currentYear}
-            </Text>
+            <View style={styles.monthTitleContainer}>
+              <Text style={styles.monthTitle}>
+                {MONTHS[currentMonth]} {currentYear}
+              </Text>
+              <TouchableOpacity onPress={goToToday} style={styles.todayButton}>
+                <Home size={16} color="#059669" />
+                <Text style={styles.todayButtonText}>Today</Text>
+              </TouchableOpacity>
+            </View>
             <TouchableOpacity onPress={handleNextMonth} style={styles.navButton}>
               <ChevronRight size={24} color="#1E293B" />
             </TouchableOpacity>
           </View>
+          
+          {/* Stats Toggle */}
+          <TouchableOpacity 
+            style={styles.statsToggle}
+            onPress={() => setShowStats(!showStats)}
+          >
+            <BarChart3 size={16} color="#059669" />
+            <Text style={styles.statsToggleText}>Monthly Stats</Text>
+          </TouchableOpacity>
+          
+          {showStats && (
+            <View style={styles.statsContainer}>
+              {(() => {
+                const stats = getMonthStats();
+                const percentage = stats.totalPrayers > 0 ? Math.round((stats.prayedCount / stats.totalPrayers) * 100) : 0;
+                return (
+                  <View style={styles.statsGrid}>
+                    <View style={styles.statItem}>
+                      <Text style={styles.statNumber}>{percentage}%</Text>
+                      <Text style={styles.statLabel}>On Time</Text>
+                    </View>
+                    <View style={styles.statItem}>
+                      <Text style={[styles.statNumber, { color: '#F59E0B' }]}>{stats.lateCount}</Text>
+                      <Text style={styles.statLabel}>Late</Text>
+                    </View>
+                    <View style={styles.statItem}>
+                      <Text style={[styles.statNumber, { color: '#EF4444' }]}>{stats.missedCount}</Text>
+                      <Text style={styles.statLabel}>Missed</Text>
+                    </View>
+                    <View style={styles.statItem}>
+                      <Text style={styles.statNumber}>{stats.totalPrayers}</Text>
+                      <Text style={styles.statLabel}>Total</Text>
+                    </View>
+                  </View>
+                );
+              })()}
+            </View>
+          )}
 
           {/* Weekday Headers */}
           <View style={styles.weekdayHeader}>
@@ -241,7 +394,10 @@ export default function AgendaScreen() {
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalContainer}>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalContainer}
+        >
           <TouchableOpacity 
             style={styles.modalOverlay}
             activeOpacity={1}
@@ -250,14 +406,24 @@ export default function AgendaScreen() {
             <TouchableOpacity activeOpacity={1}>
               <View style={styles.modalContent}>
                 <View style={styles.modalHeader}>
-                  <Text style={styles.modalTitle}>
-                    {selectedDate?.toLocaleDateString('en-US', {
-                      weekday: 'long',
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
-                  </Text>
+                  <View style={styles.modalTitleContainer}>
+                    <Text style={styles.modalTitle}>
+                      {selectedDate?.toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })}
+                    </Text>
+                    <View style={styles.dayNavigation}>
+                      <TouchableOpacity onPress={goToPreviousDay} style={styles.dayNavButton}>
+                        <ArrowLeft size={16} color="#6B7280" />
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={goToNextDay} style={styles.dayNavButton}>
+                        <ArrowRight size={16} color="#6B7280" />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
                   <TouchableOpacity onPress={() => setModalVisible(false)}>
                     <X size={24} color="#6B7280" />
                   </TouchableOpacity>
@@ -267,37 +433,136 @@ export default function AgendaScreen() {
                   {PRAYERS.map((prayer) => {
                     const dayData = getSelectedDateData();
                     const prayerData = dayData[prayer.id];
+                    const isToday = selectedDate?.toISOString().split('T')[0] === new Date().toISOString().split('T')[0];
                     
                     return (
                       <View key={prayer.id} style={styles.prayerDetail}>
                         <View style={styles.prayerDetailHeader}>
-                          <View>
+                          <View style={styles.prayerInfo}>
                             <Text style={styles.prayerDetailName}>{prayer.name}</Text>
                             <Text style={styles.prayerDetailArabic}>{prayer.arabicName}</Text>
                           </View>
-                          {prayerData?.status && (
-                            <View 
+                          <View style={styles.prayerActions}>
+                            {prayerData?.status && (
+                              <View 
+                                style={[
+                                  styles.statusBadge,
+                                  { backgroundColor: 
+                                    prayerData.status === 'prayed' ? '#10B981' :
+                                    prayerData.status === 'late' ? '#F59E0B' :
+                                    '#EF4444'
+                                  }
+                                ]}
+                              >
+                                {prayerData.status === 'prayed' && <Check size={14} color="white" />}
+                                {prayerData.status === 'late' && <Clock size={14} color="white" />}
+                                {prayerData.status === 'missed' && <X size={14} color="white" />}
+                                <Text style={styles.statusBadgeText}>
+                                  {prayerData.status.charAt(0).toUpperCase() + prayerData.status.slice(1)}
+                                </Text>
+                              </View>
+                            )}
+                          </View>
+                        </View>
+                        
+                        {/* Status Buttons for Today */}
+                        {isToday && (
+                          <View style={styles.statusButtonsModal}>
+                            <TouchableOpacity
                               style={[
-                                styles.statusBadge,
-                                { backgroundColor: 
-                                  prayerData.status === 'prayed' ? '#10B981' :
-                                  prayerData.status === 'late' ? '#F59E0B' :
-                                  '#EF4444'
-                                }
+                                styles.statusButtonModal,
+                                prayerData?.status === 'prayed' && { backgroundColor: '#10B981' },
                               ]}
+                              onPress={() => handlePrayerStatusChange(prayer.id, 'prayed')}
                             >
-                              {prayerData.status === 'prayed' && <Check size={14} color="white" />}
-                              {prayerData.status === 'late' && <Clock size={14} color="white" />}
-                              {prayerData.status === 'missed' && <X size={14} color="white" />}
-                              <Text style={styles.statusBadgeText}>
-                                {prayerData.status.charAt(0).toUpperCase() + prayerData.status.slice(1)}
-                              </Text>
+                              <Check size={16} color={prayerData?.status === 'prayed' ? 'white' : '#6B7280'} />
+                              <Text style={[
+                                styles.statusButtonModalText,
+                                prayerData?.status === 'prayed' && { color: 'white' }
+                              ]}>Prayed</Text>
+                            </TouchableOpacity>
+                            
+                            <TouchableOpacity
+                              style={[
+                                styles.statusButtonModal,
+                                prayerData?.status === 'late' && { backgroundColor: '#F59E0B' },
+                              ]}
+                              onPress={() => handlePrayerStatusChange(prayer.id, 'late')}
+                            >
+                              <Clock size={16} color={prayerData?.status === 'late' ? 'white' : '#6B7280'} />
+                              <Text style={[
+                                styles.statusButtonModalText,
+                                prayerData?.status === 'late' && { color: 'white' }
+                              ]}>Late</Text>
+                            </TouchableOpacity>
+                            
+                            <TouchableOpacity
+                              style={[
+                                styles.statusButtonModal,
+                                prayerData?.status === 'missed' && { backgroundColor: '#EF4444' },
+                              ]}
+                              onPress={() => handlePrayerStatusChange(prayer.id, 'missed')}
+                            >
+                              <X size={16} color={prayerData?.status === 'missed' ? 'white' : '#6B7280'} />
+                              <Text style={[
+                                styles.statusButtonModalText,
+                                prayerData?.status === 'missed' && { color: 'white' }
+                              ]}>Missed</Text>
+                            </TouchableOpacity>
+                          </View>
+                        )}
+                        
+                        {/* Comment Section */}
+                        <View style={styles.commentSection}>
+                          {editingPrayer === prayer.id ? (
+                            <View style={styles.commentEditContainer}>
+                              <TextInput
+                                style={styles.commentInput}
+                                placeholder="Add a note..."
+                                placeholderTextColor="#9CA3AF"
+                                value={tempComment}
+                                onChangeText={setTempComment}
+                                multiline
+                                numberOfLines={3}
+                                textAlignVertical="top"
+                              />
+                              <View style={styles.commentButtons}>
+                                <TouchableOpacity 
+                                  style={styles.commentCancelButton}
+                                  onPress={() => setEditingPrayer(null)}
+                                >
+                                  <Text style={styles.commentCancelText}>Cancel</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity 
+                                  style={styles.commentSaveButton}
+                                  onPress={saveComment}
+                                >
+                                  <Text style={styles.commentSaveText}>Save</Text>
+                                </TouchableOpacity>
+                              </View>
                             </View>
+                          ) : (
+                            <TouchableOpacity 
+                              style={styles.commentDisplay}
+                              onPress={() => handleEditComment(prayer.id)}
+                              disabled={!isToday}
+                            >
+                              {prayerData?.comment ? (
+                                <View style={styles.commentWithText}>
+                                  <MessageSquare size={16} color="#6B7280" />
+                                  <Text style={styles.prayerComment}>{prayerData.comment}</Text>
+                                  {isToday && <Edit3 size={14} color="#9CA3AF" />}
+                                </View>
+                              ) : isToday ? (
+                                <View style={styles.commentPlaceholder}>
+                                  <MessageSquare size={16} color="#D1D5DB" />
+                                  <Text style={styles.commentPlaceholderText}>Add a note...</Text>
+                                  <Edit3 size={14} color="#D1D5DB" />
+                                </View>
+                              ) : null}
+                            </TouchableOpacity>
                           )}
                         </View>
-                        {prayerData?.comment ? (
-                          <Text style={styles.prayerComment}>{prayerData.comment}</Text>
-                        ) : null}
                       </View>
                     );
                   })}
@@ -305,7 +570,7 @@ export default function AgendaScreen() {
               </View>
             </TouchableOpacity>
           </TouchableOpacity>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   );
@@ -397,11 +662,67 @@ const styles = StyleSheet.create({
   navButton: {
     padding: 8,
   },
+  monthTitleContainer: {
+    alignItems: 'center',
+    flex: 1,
+  },
   monthTitle: {
     fontSize: 20,
     fontWeight: '700' as const,
     color: '#1E293B',
     letterSpacing: -0.3,
+    marginBottom: 4,
+  },
+  todayButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: 'rgba(5, 150, 105, 0.1)',
+    gap: 4,
+  },
+  todayButtonText: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: '#059669',
+  },
+  statsToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    marginBottom: 12,
+    gap: 6,
+  },
+  statsToggleText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#059669',
+  },
+  statsContainer: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statNumber: {
+    fontSize: 20,
+    fontWeight: '700' as const,
+    color: '#10B981',
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#64748B',
+    fontWeight: '500' as const,
   },
   weekdayHeader: {
     flexDirection: 'row',
@@ -512,12 +833,129 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
   },
+  modalTitleContainer: {
+    flex: 1,
+    marginRight: 16,
+  },
   modalTitle: {
     fontSize: 18,
     fontWeight: '700' as const,
     color: '#1E293B',
+    marginBottom: 8,
+  },
+  dayNavigation: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  dayNavButton: {
+    padding: 6,
+    borderRadius: 6,
+    backgroundColor: '#F3F4F6',
+  },
+  prayerInfo: {
     flex: 1,
-    marginRight: 16,
+  },
+  prayerActions: {
+    alignItems: 'flex-end',
+  },
+  statusButtonsModal: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  statusButtonModal: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: '#F3F4F6',
+    gap: 4,
+  },
+  statusButtonModalText: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: '#6B7280',
+  },
+  commentSection: {
+    marginTop: 8,
+  },
+  commentEditContainer: {
+    gap: 12,
+  },
+  commentInput: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 14,
+    color: '#1E293B',
+    minHeight: 80,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  commentButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  commentCancelButton: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+  },
+  commentCancelText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#6B7280',
+  },
+  commentSaveButton: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    backgroundColor: '#10B981',
+    alignItems: 'center',
+  },
+  commentSaveText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#FFFFFF',
+  },
+  commentDisplay: {
+    minHeight: 40,
+    justifyContent: 'center',
+  },
+  commentWithText: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 8,
+  },
+  commentPlaceholder: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#FAFAFA',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderStyle: 'dashed' as const,
+  },
+  commentPlaceholderText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#D1D5DB',
+    fontStyle: 'italic' as const,
   },
   modalScroll: {
     padding: 24,
@@ -558,10 +996,9 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   prayerComment: {
+    flex: 1,
     fontSize: 14,
     color: '#6B7280',
     lineHeight: 20,
-    marginTop: 8,
-    fontStyle: 'italic' as const,
   },
 });
