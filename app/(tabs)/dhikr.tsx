@@ -23,6 +23,7 @@ interface DhikrItem {
 }
 
 const AVAILABLE_DHIKR: DhikrItem[] = [
+  // Basic Tasbih
   {
     id: '1',
     text: 'سُبْحَانَ اللَّهِ',
@@ -55,16 +56,10 @@ const AVAILABLE_DHIKR: DhikrItem[] = [
     count: 100,
     category: 'Tahlil'
   },
+  
+  // Extended Tasbih
   {
     id: '5',
-    text: 'أَسْتَغْفِرُ اللَّهَ',
-    transliteration: 'Astaghfirullah',
-    translation: 'I seek forgiveness from Allah',
-    count: 100,
-    category: 'Istighfar'
-  },
-  {
-    id: '6',
     text: 'سُبْحَانَ اللَّهِ وَبِحَمْدِهِ',
     transliteration: 'Subhan Allahi wa bihamdihi',
     translation: 'Glory be to Allah and praise Him',
@@ -72,7 +67,77 @@ const AVAILABLE_DHIKR: DhikrItem[] = [
     category: 'Tasbih'
   },
   {
+    id: '6',
+    text: 'سُبْحَانَ اللَّهِ الْعَظِيمِ',
+    transliteration: 'Subhan Allahi al-Azeem',
+    translation: 'Glory be to Allah, the Magnificent',
+    count: 100,
+    category: 'Tasbih'
+  },
+  {
     id: '7',
+    text: 'سُبْحَانَ اللَّهِ وَبِحَمْدِهِ سُبْحَانَ اللَّهِ الْعَظِيمِ',
+    transliteration: 'Subhan Allahi wa bihamdihi, Subhan Allahi al-Azeem',
+    translation: 'Glory be to Allah and praise Him, Glory be to Allah the Magnificent',
+    count: 100,
+    category: 'Tasbih'
+  },
+  
+  // Istighfar (Seeking Forgiveness)
+  {
+    id: '8',
+    text: 'أَسْتَغْفِرُ اللَّهَ',
+    transliteration: 'Astaghfirullah',
+    translation: 'I seek forgiveness from Allah',
+    count: 100,
+    category: 'Istighfar'
+  },
+  {
+    id: '9',
+    text: 'أَسْتَغْفِرُ اللَّهَ الْعَظِيمَ الَّذِي لَا إِلَهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ وَأَتُوبُ إِلَيْهِ',
+    transliteration: 'Astaghfirullah al-Azeem alladhi la ilaha illa Huwa al-Hayy al-Qayyum wa atubu ilayh',
+    translation: 'I seek forgiveness from Allah the Mighty, whom there is no god but He, the Living, the Eternal, and I repent to Him',
+    count: 100,
+    category: 'Istighfar'
+  },
+  {
+    id: '10',
+    text: 'رَبِّ اغْفِرْ لِي وَتُبْ عَلَيَّ إِنَّكَ أَنْتَ التَّوَّابُ الرَّحِيمُ',
+    transliteration: 'Rabbi ghfir li wa tub alayya innaka anta at-Tawwab ar-Raheem',
+    translation: 'My Lord, forgive me and accept my repentance, indeed You are the Oft-Returning, the Merciful',
+    count: 100,
+    category: 'Istighfar'
+  },
+  
+  // Salawat (Blessings on Prophet)
+  {
+    id: '11',
+    text: 'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ',
+    transliteration: 'Allahumma salli ala Muhammad',
+    translation: 'O Allah, send blessings upon Muhammad',
+    count: 100,
+    category: 'Salawat'
+  },
+  {
+    id: '12',
+    text: 'اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَى نَبِيِّنَا مُحَمَّدٍ',
+    transliteration: 'Allahumma salli wa sallim ala nabiyyina Muhammad',
+    translation: 'O Allah, send blessings and peace upon our Prophet Muhammad',
+    count: 100,
+    category: 'Salawat'
+  },
+  {
+    id: '13',
+    text: 'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَعَلَى آلِ مُحَمَّدٍ',
+    transliteration: 'Allahumma salli ala Muhammad wa ala ali Muhammad',
+    translation: 'O Allah, send blessings upon Muhammad and the family of Muhammad',
+    count: 100,
+    category: 'Salawat'
+  },
+  
+  // Powerful Dhikr
+  {
+    id: '14',
     text: 'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ',
     transliteration: 'La hawla wa la quwwata illa billah',
     translation: 'There is no power except with Allah',
@@ -80,12 +145,138 @@ const AVAILABLE_DHIKR: DhikrItem[] = [
     category: 'Hawqala'
   },
   {
-    id: '8',
-    text: 'رَبِّ اغْفِرْ لِي',
-    transliteration: 'Rabbi ghfir li',
-    translation: 'My Lord, forgive me',
+    id: '15',
+    text: 'حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ',
+    transliteration: 'Hasbuna Allahu wa ni\'ma al-wakeel',
+    translation: 'Allah is sufficient for us and He is the best Disposer of affairs',
+    count: 100,
+    category: 'Tawakkul'
+  },
+  {
+    id: '16',
+    text: 'لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ',
+    transliteration: 'La ilaha illa Allah wahdahu la shareeka lah',
+    translation: 'There is no god but Allah alone, with no partner',
+    count: 100,
+    category: 'Tahlil'
+  },
+  {
+    id: '17',
+    text: 'لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ',
+    transliteration: 'La ilaha illa Allah wahdahu la shareeka lah, lahu al-mulku wa lahu al-hamd, wa huwa ala kulli shay\'in qadeer',
+    translation: 'There is no god but Allah alone, with no partner. His is the dominion and His is the praise, and He is able to do all things',
+    count: 100,
+    category: 'Tahlil'
+  },
+  
+  // Names of Allah (Asma ul-Husna)
+  {
+    id: '18',
+    text: 'يَا رَحْمَانُ',
+    transliteration: 'Ya Rahman',
+    translation: 'O Most Merciful',
+    count: 100,
+    category: 'Asma ul-Husna'
+  },
+  {
+    id: '19',
+    text: 'يَا رَحِيمُ',
+    transliteration: 'Ya Raheem',
+    translation: 'O Most Compassionate',
+    count: 100,
+    category: 'Asma ul-Husna'
+  },
+  {
+    id: '20',
+    text: 'يَا غَفَّارُ',
+    transliteration: 'Ya Ghaffar',
+    translation: 'O Oft-Forgiving',
+    count: 100,
+    category: 'Asma ul-Husna'
+  },
+  {
+    id: '21',
+    text: 'يَا كَرِيمُ',
+    transliteration: 'Ya Kareem',
+    translation: 'O Most Generous',
+    count: 100,
+    category: 'Asma ul-Husna'
+  },
+  {
+    id: '22',
+    text: 'يَا لَطِيفُ',
+    transliteration: 'Ya Lateef',
+    translation: 'O Most Gentle',
+    count: 100,
+    category: 'Asma ul-Husna'
+  },
+  
+  // Duas from Quran and Sunnah
+  {
+    id: '23',
+    text: 'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ',
+    transliteration: 'Rabbana atina fi\'d-dunya hasanatan wa fi\'l-akhirati hasanatan wa qina adhab an-nar',
+    translation: 'Our Lord, give us good in this world and good in the next world, and save us from the punishment of the Fire',
     count: 100,
     category: 'Dua'
+  },
+  {
+    id: '24',
+    text: 'رَبِّ اشْرَحْ لِي صَدْرِي وَيَسِّرْ لِي أَمْرِي',
+    transliteration: 'Rabbi shrah li sadri wa yassir li amri',
+    translation: 'My Lord, expand my chest and make my task easy for me',
+    count: 100,
+    category: 'Dua'
+  },
+  {
+    id: '25',
+    text: 'رَبِّ زِدْنِي عِلْمًا',
+    transliteration: 'Rabbi zidni ilma',
+    translation: 'My Lord, increase me in knowledge',
+    count: 100,
+    category: 'Dua'
+  },
+  {
+    id: '26',
+    text: 'رَبَّنَا لَا تُزِغْ قُلُوبَنَا بَعْدَ إِذْ هَدَيْتَنَا وَهَبْ لَنَا مِنْ لَدُنْكَ رَحْمَةً',
+    transliteration: 'Rabbana la tuzigh qulubana ba\'da idh hadaytana wa hab lana min ladunka rahma',
+    translation: 'Our Lord, do not let our hearts deviate after You have guided us, and grant us mercy from You',
+    count: 100,
+    category: 'Dua'
+  },
+  
+  // Evening/Morning Dhikr
+  {
+    id: '27',
+    text: 'أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ',
+    transliteration: 'A\'udhu billahi min ash-shaytani\'r-rajeem',
+    translation: 'I seek refuge in Allah from Satan, the accursed',
+    count: 3,
+    category: 'Protection'
+  },
+  {
+    id: '28',
+    text: 'بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَلَا فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ',
+    transliteration: 'Bismillahi\'lladhi la yadurru ma\'a ismihi shay\'un fi\'l-ardi wa la fi\'s-sama\'i wa huwa\'s-samee\'u\'l-\'aleem',
+    translation: 'In the name of Allah with whose name nothing is harmed on earth nor in the heavens, and He is the Hearing, the Knowing',
+    count: 3,
+    category: 'Protection'
+  },
+  {
+    id: '29',
+    text: 'اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَهَ إِلَّا أَنْتَ خَلَقْتَنِي وَأَنَا عَبْدُكَ',
+    transliteration: 'Allahumma anta rabbi la ilaha illa anta, khalaqtani wa ana \'abduk',
+    translation: 'O Allah, You are my Lord, there is no god but You. You created me and I am Your servant',
+    count: 1,
+    category: 'Morning/Evening'
+  },
+  {
+    id: '30',
+    text: 'رَضِيتُ بِاللَّهِ رَبًّا وَبِالْإِسْلَامِ دِينًا وَبِمُحَمَّدٍ رَسُولًا',
+    transliteration: 'Radeetu billahi rabban wa bil-Islami deenan wa bi Muhammadin rasulan',
+    translation: 'I am pleased with Allah as my Lord, Islam as my religion, and Muhammad as my Messenger',
+    count: 3,
+    category: 'Morning/Evening'
   },
 ];
 
