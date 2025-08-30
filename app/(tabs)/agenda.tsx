@@ -398,13 +398,13 @@ export default function AgendaScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.modalContainer}
         >
-          <TouchableOpacity 
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPress={() => setModalVisible(false)}
-          >
-            <TouchableOpacity activeOpacity={1}>
-              <View style={styles.modalContent}>
+          <View style={styles.modalOverlay}>
+            <TouchableOpacity 
+              style={styles.modalBackdrop}
+              activeOpacity={1}
+              onPress={() => setModalVisible(false)}
+            />
+            <View style={styles.modalContent}>
                 <View style={styles.modalHeader}>
                   <View style={styles.modalTitleContainer}>
                     <Text style={styles.modalTitle}>
@@ -568,8 +568,7 @@ export default function AgendaScreen() {
                   })}
                 </ScrollView>
               </View>
-            </TouchableOpacity>
-          </TouchableOpacity>
+            </View>
         </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
@@ -816,8 +815,15 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
+  },
+  modalBackdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
     backgroundColor: '#FFFFFF',
