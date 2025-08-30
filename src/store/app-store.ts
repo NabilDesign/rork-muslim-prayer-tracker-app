@@ -85,8 +85,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
   settings: defaultSettings,
   prayerData: {},
 
-
-
   addReflection: (reflection) => {
     const newReflection: Reflection = {
       ...reflection,

@@ -13,8 +13,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Calendar, ChevronLeft, ChevronRight, X, Check, Clock } from 'lucide-react-native';
 import { useAppStore } from '@/src/store/app-store';
 
-
-
 const { width } = Dimensions.get('window');
 
 const PRAYERS = [

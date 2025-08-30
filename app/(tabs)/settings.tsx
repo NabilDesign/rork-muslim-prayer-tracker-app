@@ -23,8 +23,6 @@ import {
 import { useAppStore } from '@/src/store/app-store';
 import { notificationManager, getFrequencyText } from '@/src/logic/notifications';
 
-
-
 export default function SettingsScreen() {
   const { settings, updateSettings, clearAllData } = useAppStore();
   const [remindersEnabled, setRemindersEnabled] = useState(settings.notificationsEnabled);
