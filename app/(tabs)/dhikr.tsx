@@ -547,7 +547,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: '700',
+    fontWeight: '700' as const,
     color: '#1E293B',
   },
   addButton: {
@@ -583,11 +583,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#059669',
   },
   progressText: {
-    textAlign: 'center',
+    textAlign: 'center' as const,
     marginTop: 8,
     fontSize: 14,
     color: '#6B7280',
-    fontWeight: '500',
+    fontWeight: '500' as const,
   },
   dhikrCard: {
     alignItems: 'center',
@@ -595,25 +595,25 @@ const styles = StyleSheet.create({
   },
   dhikrArabic: {
     fontSize: 28,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: '#1E293B',
-    textAlign: 'center',
+    textAlign: 'center' as const,
     marginBottom: 8,
     lineHeight: 40,
   },
   dhikrTransliteration: {
     fontSize: 18,
     color: '#059669',
-    textAlign: 'center',
+    textAlign: 'center' as const,
     marginBottom: 8,
-    fontWeight: '500',
+    fontWeight: '500' as const,
   },
   dhikrTranslation: {
     fontSize: 16,
     color: '#6B7280',
-    textAlign: 'center',
+    textAlign: 'center' as const,
     marginBottom: 24,
-    fontStyle: 'italic',
+    fontStyle: 'italic' as const,
   },
   counterContainer: {
     backgroundColor: '#F1F5F9',
@@ -624,9 +624,9 @@ const styles = StyleSheet.create({
   },
   counterText: {
     fontSize: 24,
-    fontWeight: '700',
+    fontWeight: '700' as const,
     color: '#059669',
-    textAlign: 'center',
+    textAlign: 'center' as const,
   },
   tapButton: {
     backgroundColor: '#059669',
@@ -637,7 +637,7 @@ const styles = StyleSheet.create({
   tapButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '700' as const,
     letterSpacing: 1,
   },
   controlsContainer: {
@@ -668,7 +668,7 @@ const styles = StyleSheet.create({
   emptyStateText: {
     fontSize: 18,
     color: '#6B7280',
-    fontWeight: '500',
+    fontWeight: '500' as const,
   },
   routinesContainer: {
     paddingHorizontal: 20,
@@ -676,7 +676,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: '700' as const,
     color: '#1E293B',
     marginBottom: 16,
   },
@@ -687,7 +687,7 @@ const styles = StyleSheet.create({
   noRoutinesText: {
     fontSize: 16,
     color: '#6B7280',
-    fontWeight: '500',
+    fontWeight: '500' as const,
     marginBottom: 4,
   },
   noRoutinesSubtext: {
@@ -713,7 +713,7 @@ const styles = StyleSheet.create({
   },
   routineName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: '#1E293B',
     marginBottom: 4,
   },
@@ -749,7 +749,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: '#1E293B',
   },
   cancelButton: {
@@ -759,7 +759,7 @@ const styles = StyleSheet.create({
   saveButton: {
     fontSize: 16,
     color: '#059669',
-    fontWeight: '600',
+    fontWeight: '600' as const,
   },
   modalContent: {
     flex: 1,
@@ -771,7 +771,7 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: '#1E293B',
     marginBottom: 8,
   },
@@ -818,20 +818,20 @@ const styles = StyleSheet.create({
   },
   dhikrOptionArabic: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: '#1E293B',
     marginBottom: 4,
   },
   dhikrOptionTransliteration: {
     fontSize: 15,
     color: '#059669',
-    fontWeight: '500',
+    fontWeight: '500' as const,
     marginBottom: 4,
   },
   dhikrOptionTranslation: {
     fontSize: 14,
     color: '#6B7280',
-    fontStyle: 'italic',
+    fontStyle: 'italic' as const,
   },
   countInputContainer: {
     flexDirection: 'row',

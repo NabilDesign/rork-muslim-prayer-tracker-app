@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 28,
-    fontWeight: '800',
+    fontWeight: '800' as const,
     color: '#FFFFFF',
     marginTop: 8,
     marginBottom: 6,
@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: 16,
     color: 'rgba(255, 255, 255, 0.8)',
-    fontWeight: '500',
+    fontWeight: '500' as const,
   },
   content: {
     flex: 1,
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '800' as const,
     color: '#1E293B',
     paddingHorizontal: 24,
     paddingTop: 24,
@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
   },
   settingTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: '#1F2937',
   },
   settingSubtitle: {
@@ -370,13 +370,13 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 16,
     color: '#6B7280',
-    textAlign: 'center',
-    fontStyle: 'italic',
+    textAlign: 'center' as const,
+    fontStyle: 'italic' as const,
     marginBottom: 8,
   },
   footerReference: {
     fontSize: 14,
     color: '#9CA3AF',
-    fontWeight: '600',
+    fontWeight: '600' as const,
   },
 });

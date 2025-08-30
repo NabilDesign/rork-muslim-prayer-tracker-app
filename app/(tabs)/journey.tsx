@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 28,
-    fontWeight: '800',
+    fontWeight: '800' as const,
     color: '#FFFFFF',
     marginTop: 8,
     marginBottom: 6,
@@ -193,8 +193,8 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: 16,
     color: 'rgba(255, 255, 255, 0.8)',
-    fontWeight: '500',
-    textAlign: 'center',
+    fontWeight: '500' as const,
+    textAlign: 'center' as const,
   },
   content: {
     flex: 1,
@@ -233,9 +233,9 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: '#1F2937',
-    textAlign: 'center',
+    textAlign: 'center' as const,
   },
   todayButton: {
     marginTop: 4,
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
   },
   todayButtonText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: '#FFFFFF',
   },
   hadithCard: {
@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
   },
   categoryText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: '#92400E',
     marginLeft: 4,
   },
@@ -294,9 +294,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 28,
     color: '#1F2937',
-    fontWeight: '500',
-    fontStyle: 'italic',
-    textAlign: 'center',
+    fontWeight: '500' as const,
+    fontStyle: 'italic' as const,
+    textAlign: 'center' as const,
   },
   hadithFooter: {
     alignItems: 'center',
@@ -307,13 +307,13 @@ const styles = StyleSheet.create({
   },
   narratorText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: '#2D5016',
   },
   sourceText: {
     fontSize: 14,
     color: '#6B7280',
-    fontWeight: '500',
+    fontWeight: '500' as const,
   },
   reflectionSection: {
     backgroundColor: '#F0FDF4',
@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
   },
   reflectionTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '700' as const,
     color: '#2D5016',
     marginBottom: 12,
   },
@@ -332,6 +332,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
     color: '#374151',
-    fontWeight: '500',
+    fontWeight: '500' as const,
   },
 });
