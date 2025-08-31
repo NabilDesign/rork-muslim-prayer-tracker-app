@@ -56,8 +56,8 @@ interface AppStore {
   clearAllData: () => void;
   
   // Prayer Actions
-  updatePrayerStatus: (prayerId: string, status: PrayerStatus) => void;
-  addPrayerComment: (prayerId: string, comment: string) => void;
+  updatePrayerStatus: (prayerId: string, status: PrayerStatus, date?: string) => void;
+  addPrayerComment: (prayerId: string, comment: string, date?: string) => void;
   getTodaysPrayers: () => DayPrayerData;
   getPrayerDataForDate: (date: string) => DayPrayerData;
   
@@ -148,46 +148,46 @@ export const useAppStore = create<AppStore>((set, get) => ({
     return get().badges;
   },
 
-  updatePrayerStatus: (prayerId, status) => {
-    const today = new Date().toISOString().split('T')[0];
+  updatePrayerStatus: (prayerId, status, date) => {
+    const targetDate = date || new Date().toISOString().split('T')[0];
     const currentData = get().prayerData;
-    const todayData = currentData[today] || {};
+    const dayData = currentData[targetDate] || {};
     
-    const updatedTodayData = {
-      ...todayData,
+    const updatedDayData = {
+      ...dayData,
       [prayerId]: {
-        ...todayData[prayerId],
+        ...dayData[prayerId],
         status,
-        comment: todayData[prayerId]?.comment || '',
+        comment: dayData[prayerId]?.comment || '',
       },
     };
     
     const updatedPrayerData = {
       ...currentData,
-      [today]: updatedTodayData,
+      [targetDate]: updatedDayData,
     };
     
     set({ prayerData: updatedPrayerData });
     AsyncStorage.setItem(STORAGE_KEYS.PRAYER_DATA, JSON.stringify(updatedPrayerData));
   },
 
-  addPrayerComment: (prayerId, comment) => {
-    const today = new Date().toISOString().split('T')[0];
+  addPrayerComment: (prayerId, comment, date) => {
+    const targetDate = date || new Date().toISOString().split('T')[0];
     const currentData = get().prayerData;
-    const todayData = currentData[today] || {};
+    const dayData = currentData[targetDate] || {};
     
-    const updatedTodayData = {
-      ...todayData,
+    const updatedDayData = {
+      ...dayData,
       [prayerId]: {
-        ...todayData[prayerId],
-        status: todayData[prayerId]?.status || null,
+        ...dayData[prayerId],
+        status: dayData[prayerId]?.status || null,
         comment,
       },
     };
     
     const updatedPrayerData = {
       ...currentData,
-      [today]: updatedTodayData,
+      [targetDate]: updatedDayData,
     };
     
     set({ prayerData: updatedPrayerData });

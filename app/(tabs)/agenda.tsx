@@ -158,35 +158,22 @@ export default function AgendaScreen() {
   };
 
   const updatePrayerStatusForDate = (dateStr: string, prayerId: string, status: 'prayed' | 'late' | 'missed' | null) => {
-    // This is a simplified version - in a real app you'd want to extend the store
-    // For now, we'll only allow editing today's prayers
-    const today = new Date().toISOString().split('T')[0];
-    if (dateStr === today) {
-      updatePrayerStatus(prayerId, status);
-    } else {
-      Alert.alert('Notice', 'You can only edit today\'s prayers. Past prayers are locked for accuracy.');
-    }
+    updatePrayerStatus(prayerId, status, dateStr);
   };
 
   const handleEditComment = (prayerId: string) => {
     if (!selectedDate) return;
     
     const dateStr = selectedDate.toISOString().split('T')[0];
-    const today = new Date().toISOString().split('T')[0];
-    
-    if (dateStr !== today) {
-      Alert.alert('Notice', 'You can only edit today\'s prayer comments.');
-      return;
-    }
-    
     const dayData = getPrayerDataForDate(dateStr);
     setEditingPrayer(prayerId);
     setTempComment(dayData[prayerId]?.comment || '');
   };
 
   const saveComment = () => {
-    if (editingPrayer) {
-      addPrayerComment(editingPrayer, tempComment);
+    if (editingPrayer && selectedDate) {
+      const dateStr = selectedDate.toISOString().split('T')[0];
+      addPrayerComment(editingPrayer, tempComment, dateStr);
     }
     setEditingPrayer(null);
     setTempComment('');
@@ -465,9 +452,8 @@ export default function AgendaScreen() {
                           </View>
                         </View>
                         
-                        {/* Status Buttons for Today */}
-                        {isToday && (
-                          <View style={styles.statusButtonsModal}>
+                        {/* Status Buttons */}
+                        <View style={styles.statusButtonsModal}>
                             <TouchableOpacity
                               style={[
                                 styles.statusButtonModal,
@@ -509,8 +495,7 @@ export default function AgendaScreen() {
                                 prayerData?.status === 'missed' && { color: 'white' }
                               ]}>Missed</Text>
                             </TouchableOpacity>
-                          </View>
-                        )}
+                        </View>
                         
                         {/* Comment Section */}
                         <View style={styles.commentSection}>
@@ -545,21 +530,20 @@ export default function AgendaScreen() {
                             <TouchableOpacity 
                               style={styles.commentDisplay}
                               onPress={() => handleEditComment(prayer.id)}
-                              disabled={!isToday}
                             >
                               {prayerData?.comment ? (
                                 <View style={styles.commentWithText}>
                                   <MessageSquare size={16} color="#6B7280" />
                                   <Text style={styles.prayerComment}>{prayerData.comment}</Text>
-                                  {isToday && <Edit3 size={14} color="#9CA3AF" />}
+                                  <Edit3 size={14} color="#9CA3AF" />
                                 </View>
-                              ) : isToday ? (
+                              ) : (
                                 <View style={styles.commentPlaceholder}>
                                   <MessageSquare size={16} color="#D1D5DB" />
                                   <Text style={styles.commentPlaceholderText}>Add a note...</Text>
                                   <Edit3 size={14} color="#D1D5DB" />
                                 </View>
-                              ) : null}
+                              )}
                             </TouchableOpacity>
                           )}
                         </View>

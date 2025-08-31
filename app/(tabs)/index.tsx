@@ -53,12 +53,13 @@ export default function TodayScreen() {
   }, []);
 
   const handleStatusChange = (prayerId: string, status: PrayerStatus) => {
+    const today = new Date().toISOString().split('T')[0];
     const currentStatus = todaysPrayers[prayerId]?.status;
     
     if (currentStatus === status) {
-      updatePrayerStatus(prayerId, null);
+      updatePrayerStatus(prayerId, null, today);
     } else {
-      updatePrayerStatus(prayerId, status);
+      updatePrayerStatus(prayerId, status, today);
       
       // Animate the selection
       Animated.sequence([
@@ -86,7 +87,8 @@ export default function TodayScreen() {
 
   const saveComment = () => {
     if (selectedPrayer) {
-      addPrayerComment(selectedPrayer, tempComment);
+      const today = new Date().toISOString().split('T')[0];
+      addPrayerComment(selectedPrayer, tempComment, today);
     }
     setCommentModalVisible(false);
     setSelectedPrayer(null);
