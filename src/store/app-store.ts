@@ -153,6 +153,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
     const currentData = get().prayerData;
     const dayData = currentData[targetDate] || {};
     
+    console.log(`Updating prayer status: ${prayerId} = ${status} for date ${targetDate}`);
+    
     const updatedDayData = {
       ...dayData,
       [prayerId]: {
@@ -169,6 +171,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
     
     set({ prayerData: updatedPrayerData });
     AsyncStorage.setItem(STORAGE_KEYS.PRAYER_DATA, JSON.stringify(updatedPrayerData));
+    
+    console.log(`Prayer data saved. Total days in storage: ${Object.keys(updatedPrayerData).length}`);
   },
 
   addPrayerComment: (prayerId, comment, date) => {
@@ -207,6 +211,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 // Initialize store from AsyncStorage
 const initializeStore = async () => {
   try {
+    console.log('Initializing app store...');
     const [reflections, badges, settings, prayerData] = await Promise.all([
       AsyncStorage.getItem(STORAGE_KEYS.REFLECTIONS),
       AsyncStorage.getItem(STORAGE_KEYS.BADGES),
@@ -215,12 +220,15 @@ const initializeStore = async () => {
     ]);
 
     const parsedSettings = settings ? { ...defaultSettings, ...JSON.parse(settings) } : defaultSettings;
+    const parsedPrayerData = prayerData ? JSON.parse(prayerData) : {};
+    
+    console.log('Loaded prayer data from storage:', Object.keys(parsedPrayerData).length, 'days');
     
     useAppStore.setState({
       reflections: reflections ? JSON.parse(reflections) : [],
       badges: badges ? JSON.parse(badges) : [],
       settings: parsedSettings,
-      prayerData: prayerData ? JSON.parse(prayerData) : {},
+      prayerData: parsedPrayerData,
     });
     
     // Initialize notifications with current settings
@@ -228,6 +236,8 @@ const initializeStore = async () => {
       enabled: parsedSettings.notificationsEnabled,
       frequency: parsedSettings.reminderMinutes,
     });
+    
+    console.log('App store initialized successfully');
   } catch (error) {
     console.error('Error initializing store:', error);
   }

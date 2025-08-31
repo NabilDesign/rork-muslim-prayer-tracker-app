@@ -1,11 +1,11 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
-// Configure notification behavior
+// Configure notification behavior - silent notifications
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
-    shouldPlaySound: false,
+    shouldPlaySound: false, // Silent notifications
     shouldSetBadge: false,
     shouldShowBanner: true,
     shouldShowList: true,
