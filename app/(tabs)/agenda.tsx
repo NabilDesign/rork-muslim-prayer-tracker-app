@@ -272,7 +272,31 @@ export default function AgendaScreen() {
           
           {showStats && (
             <View style={styles.statsContainer}>
-              <MonthlyStatsView getMonthStats={getMonthStats} />
+              <View style={styles.statsGrid}>
+                {(() => {
+                  const stats = getMonthStats();
+                  return (
+                    <>
+                      <View style={styles.statItem}>
+                        <Text style={styles.statNumber}>{stats.prayedCount}</Text>
+                        <Text style={styles.statLabel}>Prayed</Text>
+                      </View>
+                      <View style={styles.statItem}>
+                        <Text style={[styles.statNumber, { color: '#F59E0B' }]}>{stats.lateCount}</Text>
+                        <Text style={styles.statLabel}>Late</Text>
+                      </View>
+                      <View style={styles.statItem}>
+                        <Text style={[styles.statNumber, { color: '#EF4444' }]}>{stats.missedCount}</Text>
+                        <Text style={styles.statLabel}>Missed</Text>
+                      </View>
+                      <View style={styles.statItem}>
+                        <Text style={[styles.statNumber, { color: '#6B7280' }]}>{stats.totalPrayers}</Text>
+                        <Text style={styles.statLabel}>Total</Text>
+                      </View>
+                    </>
+                  );
+                })()}
+              </View>
             </View>
           )}
 
