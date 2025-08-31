@@ -276,7 +276,7 @@ export default function AgendaScreen() {
                 {(() => {
                   const stats = getMonthStats();
                   return (
-                    <>
+                    <React.Fragment>
                       <View style={styles.statItem}>
                         <Text style={styles.statNumber}>{stats.prayedCount}</Text>
                         <Text style={styles.statLabel}>Prayed</Text>
@@ -293,7 +293,7 @@ export default function AgendaScreen() {
                         <Text style={[styles.statNumber, { color: '#6B7280' }]}>{stats.totalPrayers}</Text>
                         <Text style={styles.statLabel}>Total</Text>
                       </View>
-                    </>
+                    </React.Fragment>
                   );
                 })()}
               </View>

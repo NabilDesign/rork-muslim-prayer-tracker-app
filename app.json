@@ -2,7 +2,7 @@
   "expo": {
     "name": "Muslim Prayer Tracker App",
     "slug": "muslim-prayer-tracker-app",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
@@ -44,6 +44,9 @@
           "icon": "./assets/notification_icon.png",
           "color": "#ffffff",
           "defaultChannel": "default",
+          "sounds": [
+            "./local/assets/notification_sound.wav"
+          ],
           "enableBackgroundRemoteNotifications": false
         }
       ]
