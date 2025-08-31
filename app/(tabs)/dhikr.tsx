@@ -434,7 +434,7 @@ export default function DhikrScreen() {
                 <View style={styles.routineInfo}>
                   <Text style={styles.routineName}>{routine.name}</Text>
                   <Text style={styles.routineDetails}>
-                    {routine.dhikrList.length} dhikr • {routine.dhikrList.reduce((sum: number, d: any) => sum + d.count, 0)} total
+                    {routine.dhikrList.length} dhikr · {routine.dhikrList.reduce((sum: number, d: any) => sum + d.count, 0)} total
                   </Text>
                 </View>
                 <View style={styles.routineActions}>
