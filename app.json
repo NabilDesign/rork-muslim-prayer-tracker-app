@@ -43,8 +43,6 @@
         {
           "icon": "./assets/notification_icon.png",
           "color": "#ffffff",
-          ],
-          "enableBackgroundRemoteNotifications": false
         }
       ]
     ],
