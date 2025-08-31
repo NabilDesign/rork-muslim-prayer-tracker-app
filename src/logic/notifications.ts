@@ -5,7 +5,7 @@ import { Platform } from 'react-native';
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
-    shouldPlaySound: true,
+    shouldPlaySound: false,
     shouldSetBadge: false,
     shouldShowBanner: true,
     shouldShowList: true,
@@ -88,7 +88,6 @@ class NotificationManager {
         content: {
           title: 'Dhikr Reminder',
           body: reminderMessages[Math.floor(Math.random() * reminderMessages.length)],
-          sound: 'default',
         },
         trigger: {
           type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
