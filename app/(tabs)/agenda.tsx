@@ -54,7 +54,7 @@ export default function AgendaScreen() {
   };
 
   const getDayStatus = (date: Date) => {
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     const dayData = prayerData[dateStr];
     
     if (!dayData) return null;
@@ -146,7 +146,7 @@ export default function AgendaScreen() {
   const handlePrayerStatusChange = (prayerId: string, status: 'prayed' | 'late' | 'missed' | null) => {
     if (!selectedDate) return;
     
-    const dateStr = selectedDate.toISOString().split('T')[0];
+    const dateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
     const currentData = getPrayerDataForDate(dateStr);
     const currentStatus = currentData[prayerId]?.status;
     
@@ -164,7 +164,7 @@ export default function AgendaScreen() {
   const handleEditComment = (prayerId: string) => {
     if (!selectedDate) return;
     
-    const dateStr = selectedDate.toISOString().split('T')[0];
+    const dateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
     const dayData = getPrayerDataForDate(dateStr);
     setEditingPrayer(prayerId);
     setTempComment(dayData[prayerId]?.comment || '');
@@ -172,7 +172,7 @@ export default function AgendaScreen() {
 
   const saveComment = () => {
     if (editingPrayer && selectedDate) {
-      const dateStr = selectedDate.toISOString().split('T')[0];
+      const dateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
       addPrayerComment(editingPrayer, tempComment, dateStr);
     }
     setEditingPrayer(null);
@@ -191,7 +191,7 @@ export default function AgendaScreen() {
     
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day);
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
       const dayData = prayerData[dateStr];
       
       if (dayData) {
@@ -209,7 +209,7 @@ export default function AgendaScreen() {
 
   const getSelectedDateData = () => {
     if (!selectedDate) return {};
-    const dateStr = selectedDate.toISOString().split('T')[0];
+    const dateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
     return getPrayerDataForDate(dateStr);
   };
 
@@ -421,7 +421,10 @@ export default function AgendaScreen() {
                   {PRAYERS.map((prayer) => {
                     const dayData = getSelectedDateData();
                     const prayerData = dayData[prayer.id];
-                    const isToday = selectedDate?.toISOString().split('T')[0] === new Date().toISOString().split('T')[0];
+                    const today = new Date();
+                    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                    const selectedDateStr = selectedDate ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}` : '';
+                    const isToday = selectedDateStr === todayStr;
                     
                     return (
                       <View key={prayer.id} style={styles.prayerDetail}>

@@ -149,7 +149,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
 
   updatePrayerStatus: (prayerId, status, date) => {
-    const targetDate = date || new Date().toISOString().split('T')[0];
+    const today = new Date();
+    const targetDate = date || `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     const currentData = get().prayerData;
     const dayData = currentData[targetDate] || {};
     
@@ -176,7 +177,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
 
   addPrayerComment: (prayerId, comment, date) => {
-    const targetDate = date || new Date().toISOString().split('T')[0];
+    const today = new Date();
+    const targetDate = date || `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     const currentData = get().prayerData;
     const dayData = currentData[targetDate] || {};
     
@@ -199,8 +201,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
 
   getTodaysPrayers: () => {
-    const today = new Date().toISOString().split('T')[0];
-    return get().prayerData[today] || {};
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    return get().prayerData[todayStr] || {};
   },
 
   getPrayerDataForDate: (date) => {
