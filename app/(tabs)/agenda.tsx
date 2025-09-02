@@ -729,9 +729,10 @@ const styles = StyleSheet.create({
   calendarGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap' as const,
+    justifyContent: 'flex-start',
   },
   dayCell: {
-    width: (width - 80) / 7,
+    width: `${100/7}%`,
     aspectRatio: 1,
     alignItems: 'center',
     justifyContent: 'center',
