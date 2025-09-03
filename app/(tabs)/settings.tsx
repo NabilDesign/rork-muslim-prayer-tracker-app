@@ -55,7 +55,7 @@ export default function SettingsScreen() {
   const handleClearData = () => {
     Alert.alert(
       'Clear All Data',
-      'This will permanently delete all your reflections and settings. This action cannot be undone.',
+      'This will permanently delete all your progress and settings. This action cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
