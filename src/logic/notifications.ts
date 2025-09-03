@@ -78,7 +78,7 @@ class NotificationManager {
       const reminderMessages = [
         'Time for dhikr! Remember Allah and find peace.',
         'Take a moment to remember Allah through dhikr.',
-        'Connect with Allah through beautiful dhikr.',
+        'Connect with Allah through dhikr.',
         'A few minutes of dhikr can bring tranquility to your day.',
       ];
 
