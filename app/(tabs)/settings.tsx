@@ -113,7 +113,7 @@ export default function SettingsScreen() {
           <SettingItem
             icon={Bell}
             title="Daily Reminders"
-            subtitle="Get reminded for daily reflections"
+            subtitle="Get reminded for daily dhikr"
           >
             <Switch
               value={remindersEnabled}
