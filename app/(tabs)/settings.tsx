@@ -139,7 +139,7 @@ export default function SettingsScreen() {
             onPress={() => {
               Alert.alert(
                 'Reminder Frequency',
-                'Choose how often you want to be reminded for reflections',
+                'Choose how often you want to be reminded for dhikr',
                 [
                   { text: '2 times a day', onPress: async () => {
                     setReminderMinutes(720); // 12 hours
