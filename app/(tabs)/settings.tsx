@@ -204,7 +204,7 @@ export default function SettingsScreen() {
           <SettingItem
             icon={Trash2}
             title="Clear All Data"
-            subtitle="Delete all reflections and settings"
+            subtitle="Delete all progress and settings"
             onPress={handleClearData}
           />
         </View>
