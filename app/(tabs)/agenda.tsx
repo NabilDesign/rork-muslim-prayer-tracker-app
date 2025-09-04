@@ -277,7 +277,7 @@ export default function AgendaScreen() {
                 {(() => {
                   const stats = getMonthStats();
                   return (
-                    <React.Fragment>
+                    <>
                       <View style={styles.statItem}>
                         <Text style={styles.statNumber}>{stats.prayedCount}</Text>
                         <Text style={styles.statLabel}>Prayed</Text>
@@ -294,7 +294,7 @@ export default function AgendaScreen() {
                         <Text style={[styles.statNumber, { color: '#6B7280' }]}>{stats.totalPrayers}</Text>
                         <Text style={styles.statLabel}>Total</Text>
                       </View>
-                    </React.Fragment>
+                    </>
                   );
                 })()}
               </View>
@@ -325,27 +325,23 @@ export default function AgendaScreen() {
               return (
                 <TouchableOpacity
                   key={`d-${currentYear}-${currentMonth}-${day}`}
-                  style={[
-                    styles.dayCell,
-                    today && styles.todayCell,
-                  ]}
+                  style={styles.dayCell}
                   onPress={() => handleDayPress(day)}
                   activeOpacity={0.7}
                 >
-                  <Text style={[
-                    styles.dayText,
-                    today && styles.todayText,
-                  ]}>
-                    {day}
-                  </Text>
-                  {status && (
-                    <View 
-                      style={[
-                        styles.statusDot,
-                        { backgroundColor: statusColor }
-                      ]}
-                    />
-                  )}
+                  <View style={[styles.dayInner, today && styles.todayInner]}>
+                    <Text style={[styles.dayText, today && styles.todayText]}>
+                      {day}
+                    </Text>
+                    {status && (
+                      <View 
+                        style={[
+                          styles.statusDot,
+                          { backgroundColor: statusColor }
+                        ]}
+                      />
+                    )}
+                  </View>
                 </TouchableOpacity>
               );
             })}
@@ -729,17 +725,22 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   dayCell: {
-    // Fix: exacte fractie i.p.v. width-percentage om afrondingsfouten te vermijden
-    flexBasis: '14.285714%',
-    maxWidth: '14.285714%',
+    // exact 1/7 breedte; geen padding/margin hier (voorkomt wrap van zaterdag)
+    width: `${100 / 7}%`,
     aspectRatio: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 4,
   },
-  todayCell: {
-    backgroundColor: '#F3F4F6',
+  dayInner: {
+    position: 'relative',
+    width: '92%',
+    height: '92%',
     borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  todayInner: {
+    backgroundColor: '#F3F4F6',
   },
   dayText: {
     fontSize: 16,
@@ -752,11 +753,11 @@ const styles = StyleSheet.create({
     color: '#0F172A',
   },
   statusDot: {
+    position: 'absolute',
+    bottom: 6,
     width: 6,
     height: 6,
     borderRadius: 3,
-    position: 'absolute',
-    bottom: 8,
   },
   legendContainer: {
     backgroundColor: '#FFFFFF',
