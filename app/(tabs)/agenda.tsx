@@ -101,6 +101,12 @@ export default function AgendaScreen() {
       days.push(i);
     }
     
+    // Fill remaining cells to complete the last week (ensure 6 weeks total)
+    const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+    while (days.length < totalCells) {
+      days.push(null);
+    }
+    
     return days;
   }, [currentDate]);
 
