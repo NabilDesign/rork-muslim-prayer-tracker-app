@@ -6,18 +6,14 @@ import {
   ScrollView,
   TouchableOpacity,
   Modal,
-  Dimensions,
   TextInput,
   KeyboardAvoidingView,
   Platform,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Calendar, ChevronLeft, ChevronRight, X, Check, Clock, Edit3, MessageSquare, BarChart3, ArrowLeft, ArrowRight, Home } from 'lucide-react-native';
 import { useAppStore } from '@/src/store/app-store';
-
-const { width } = Dimensions.get('window');
 
 const PRAYERS = [
   { id: 'fajr', name: 'Fajr', arabicName: 'الفجر' },
@@ -32,6 +28,10 @@ const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'
 ];
+
+// helper voor consistente datumstrings
+const pad = (n: number) => String(n).padStart(2, '0');
+const formatDate = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
 export default function AgendaScreen() {
   const { prayerData, getPrayerDataForDate, updatePrayerStatus, addPrayerComment } = useAppStore();
@@ -54,7 +54,7 @@ export default function AgendaScreen() {
   };
 
   const getDayStatus = (date: Date) => {
-    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    const dateStr = formatDate(date);
     const dayData = prayerData[dateStr];
     
     if (!dayData) return null;
@@ -64,6 +64,7 @@ export default function AgendaScreen() {
     let missedCount = 0;
     
     Object.values(dayData).forEach((prayer: any) => {
+      if (!prayer) return;
       if (prayer.status === 'prayed') prayedCount++;
       else if (prayer.status === 'late') lateCount++;
       else if (prayer.status === 'missed') missedCount++;
@@ -89,31 +90,22 @@ export default function AgendaScreen() {
   const calendarDays = useMemo(() => {
     const daysInMonth = getDaysInMonth(currentDate);
     const firstDay = getFirstDayOfMonth(currentDate);
-    const days = [];
+    const days: (number | null)[] = [];
     
-    // Add empty cells for days before month starts
+    // lege cellen voor de start van de maand
     for (let i = 0; i < firstDay; i++) {
       days.push(null);
     }
-    
-    // Add days of the month
+    // dagen van de maand
     for (let i = 1; i <= daysInMonth; i++) {
       days.push(i);
     }
-    
-    // Fill remaining cells to complete 6 weeks (42 cells total)
-    // This ensures all weeks are complete and Saturday column is filled
-    const totalCells = 42;
-    while (days.length < totalCells) {
+    // vul aan tot 6 rijen (42 cellen)
+    while (days.length < 42) {
       days.push(null);
     }
-    
-    console.log(`Calendar for ${MONTHS[currentMonth]} ${currentYear}:`);
-    console.log(`Days in month: ${daysInMonth}, First day: ${firstDay}, Total cells: ${days.length}`);
-    console.log('Calendar grid:', days);
-    
     return days;
-  }, [currentDate, currentMonth, currentYear]);
+  }, [currentDate]);
 
   const handlePreviousMonth = () => {
     setCurrentDate(new Date(currentYear, currentMonth - 1));
@@ -154,13 +146,15 @@ export default function AgendaScreen() {
     }
   };
 
+  const updatePrayerStatusForDate = (dateStr: string, prayerId: string, status: 'prayed' | 'late' | 'missed' | null) => {
+    updatePrayerStatus(prayerId, status, dateStr);
+  };
+
   const handlePrayerStatusChange = (prayerId: string, status: 'prayed' | 'late' | 'missed' | null) => {
     if (!selectedDate) return;
-    
-    const dateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
+    const dateStr = formatDate(selectedDate);
     const currentData = getPrayerDataForDate(dateStr);
     const currentStatus = currentData[prayerId]?.status;
-    
     if (currentStatus === status) {
       updatePrayerStatusForDate(dateStr, prayerId, null);
     } else {
@@ -168,14 +162,9 @@ export default function AgendaScreen() {
     }
   };
 
-  const updatePrayerStatusForDate = (dateStr: string, prayerId: string, status: 'prayed' | 'late' | 'missed' | null) => {
-    updatePrayerStatus(prayerId, status, dateStr);
-  };
-
   const handleEditComment = (prayerId: string) => {
     if (!selectedDate) return;
-    
-    const dateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
+    const dateStr = formatDate(selectedDate);
     const dayData = getPrayerDataForDate(dateStr);
     setEditingPrayer(prayerId);
     setTempComment(dayData[prayerId]?.comment || '');
@@ -183,7 +172,7 @@ export default function AgendaScreen() {
 
   const saveComment = () => {
     if (editingPrayer && selectedDate) {
-      const dateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
+      const dateStr = formatDate(selectedDate);
       addPrayerComment(editingPrayer, tempComment, dateStr);
     }
     setEditingPrayer(null);
@@ -202,11 +191,12 @@ export default function AgendaScreen() {
     
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day);
-      const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      const dateStr = formatDate(date);
       const dayData = prayerData[dateStr];
       
       if (dayData) {
         Object.values(dayData).forEach((prayer: any) => {
+          if (!prayer) return;
           totalPrayers++;
           if (prayer.status === 'prayed') prayedCount++;
           else if (prayer.status === 'late') lateCount++;
@@ -220,7 +210,7 @@ export default function AgendaScreen() {
 
   const getSelectedDateData = () => {
     if (!selectedDate) return {};
-    const dateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
+    const dateStr = formatDate(selectedDate);
     return getPrayerDataForDate(dateStr);
   };
 
@@ -334,7 +324,7 @@ export default function AgendaScreen() {
               
               return (
                 <TouchableOpacity
-                  key={day}
+                  key={`d-${currentYear}-${currentMonth}-${day}`}
                   style={[
                     styles.dayCell,
                     today && styles.todayCell,
@@ -431,11 +421,7 @@ export default function AgendaScreen() {
                 <ScrollView style={styles.modalScroll}>
                   {PRAYERS.map((prayer) => {
                     const dayData = getSelectedDateData();
-                    const prayerData = dayData[prayer.id];
-                    const today = new Date();
-                    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-                    const selectedDateStr = selectedDate ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}` : '';
-                    const isToday = selectedDateStr === todayStr;
+                    const prayerDataEntry = (dayData as any)[prayer.id];
                     
                     return (
                       <View key={prayer.id} style={styles.prayerDetail}>
@@ -445,22 +431,22 @@ export default function AgendaScreen() {
                             <Text style={styles.prayerDetailArabic}>{prayer.arabicName}</Text>
                           </View>
                           <View style={styles.prayerActions}>
-                            {prayerData?.status && (
+                            {prayerDataEntry?.status && (
                               <View 
                                 style={[
                                   styles.statusBadge,
                                   { backgroundColor: 
-                                    prayerData.status === 'prayed' ? '#10B981' :
-                                    prayerData.status === 'late' ? '#F59E0B' :
+                                    prayerDataEntry.status === 'prayed' ? '#10B981' :
+                                    prayerDataEntry.status === 'late' ? '#F59E0B' :
                                     '#EF4444'
                                   }
                                 ]}
                               >
-                                {prayerData.status === 'prayed' && <Check size={14} color="white" />}
-                                {prayerData.status === 'late' && <Clock size={14} color="white" />}
-                                {prayerData.status === 'missed' && <X size={14} color="white" />}
+                                {prayerDataEntry.status === 'prayed' && <Check size={14} color="white" />}
+                                {prayerDataEntry.status === 'late' && <Clock size={14} color="white" />}
+                                {prayerDataEntry.status === 'missed' && <X size={14} color="white" />}
                                 <Text style={styles.statusBadgeText}>
-                                  {prayerData.status.charAt(0).toUpperCase() + prayerData.status.slice(1)}
+                                  {prayerDataEntry.status.charAt(0).toUpperCase() + prayerDataEntry.status.slice(1)}
                                 </Text>
                               </View>
                             )}
@@ -472,42 +458,42 @@ export default function AgendaScreen() {
                             <TouchableOpacity
                               style={[
                                 styles.statusButtonModal,
-                                prayerData?.status === 'prayed' && { backgroundColor: '#10B981' },
+                                prayerDataEntry?.status === 'prayed' && { backgroundColor: '#10B981' },
                               ]}
                               onPress={() => handlePrayerStatusChange(prayer.id, 'prayed')}
                             >
-                              <Check size={16} color={prayerData?.status === 'prayed' ? 'white' : '#6B7280'} />
+                              <Check size={16} color={prayerDataEntry?.status === 'prayed' ? 'white' : '#6B7280'} />
                               <Text style={[
                                 styles.statusButtonModalText,
-                                prayerData?.status === 'prayed' && { color: 'white' }
+                                prayerDataEntry?.status === 'prayed' && { color: 'white' }
                               ]}>Prayed</Text>
                             </TouchableOpacity>
                             
                             <TouchableOpacity
                               style={[
                                 styles.statusButtonModal,
-                                prayerData?.status === 'late' && { backgroundColor: '#F59E0B' },
+                                prayerDataEntry?.status === 'late' && { backgroundColor: '#F59E0B' },
                               ]}
                               onPress={() => handlePrayerStatusChange(prayer.id, 'late')}
                             >
-                              <Clock size={16} color={prayerData?.status === 'late' ? 'white' : '#6B7280'} />
+                              <Clock size={16} color={prayerDataEntry?.status === 'late' ? 'white' : '#6B7280'} />
                               <Text style={[
                                 styles.statusButtonModalText,
-                                prayerData?.status === 'late' && { color: 'white' }
+                                prayerDataEntry?.status === 'late' && { color: 'white' }
                               ]}>Late</Text>
                             </TouchableOpacity>
                             
                             <TouchableOpacity
                               style={[
                                 styles.statusButtonModal,
-                                prayerData?.status === 'missed' && { backgroundColor: '#EF4444' },
+                                prayerDataEntry?.status === 'missed' && { backgroundColor: '#EF4444' },
                               ]}
                               onPress={() => handlePrayerStatusChange(prayer.id, 'missed')}
                             >
-                              <X size={16} color={prayerData?.status === 'missed' ? 'white' : '#6B7280'} />
+                              <X size={16} color={prayerDataEntry?.status === 'missed' ? 'white' : '#6B7280'} />
                               <Text style={[
                                 styles.statusButtonModalText,
-                                prayerData?.status === 'missed' && { color: 'white' }
+                                prayerDataEntry?.status === 'missed' && { color: 'white' }
                               ]}>Missed</Text>
                             </TouchableOpacity>
                         </View>
@@ -546,10 +532,10 @@ export default function AgendaScreen() {
                               style={styles.commentDisplay}
                               onPress={() => handleEditComment(prayer.id)}
                             >
-                              {prayerData?.comment ? (
+                              {prayerDataEntry?.comment ? (
                                 <View style={styles.commentWithText}>
                                   <MessageSquare size={16} color="#6B7280" />
-                                  <Text style={styles.prayerComment}>{prayerData.comment}</Text>
+                                  <Text style={styles.prayerComment}>{prayerDataEntry.comment}</Text>
                                   <Edit3 size={14} color="#9CA3AF" />
                                 </View>
                               ) : (
@@ -741,15 +727,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap' as const,
     justifyContent: 'flex-start',
-    width: '100%',
   },
   dayCell: {
-    width: `${100/7}%`,
+    // Fix: exacte fractie i.p.v. width-percentage om afrondingsfouten te vermijden
+    flexBasis: '14.285714%',
+    maxWidth: '14.285714%',
     aspectRatio: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 4,
-    minHeight: 40,
   },
   todayCell: {
     backgroundColor: '#F3F4F6',
