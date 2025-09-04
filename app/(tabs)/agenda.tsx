@@ -103,12 +103,17 @@ export default function AgendaScreen() {
     
     // Fill remaining cells to complete 6 weeks (42 cells total)
     // This ensures all weeks are complete and Saturday column is filled
-    while (days.length < 42) {
+    const totalCells = 42;
+    while (days.length < totalCells) {
       days.push(null);
     }
     
+    console.log(`Calendar for ${MONTHS[currentMonth]} ${currentYear}:`);
+    console.log(`Days in month: ${daysInMonth}, First day: ${firstDay}, Total cells: ${days.length}`);
+    console.log('Calendar grid:', days);
+    
     return days;
-  }, [currentDate]);
+  }, [currentDate, currentMonth, currentYear]);
 
   const handlePreviousMonth = () => {
     setCurrentDate(new Date(currentYear, currentMonth - 1));
@@ -736,6 +741,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap' as const,
     justifyContent: 'flex-start',
+    width: '100%',
   },
   dayCell: {
     width: `${100/7}%`,
@@ -743,6 +749,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 4,
+    minHeight: 40,
   },
   todayCell: {
     backgroundColor: '#F3F4F6',
