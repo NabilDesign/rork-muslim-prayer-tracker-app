@@ -215,7 +215,7 @@ export default function SettingsScreen() {
           <SettingItem
             icon={Info}
             title="App Version"
-            subtitle="1.3.0"
+            subtitle="1.6.0"
           />
 
           <SettingItem
