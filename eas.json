@@ -15,7 +15,7 @@
     },
     "production": {
       "distribution": "store",
-      "autoIncrement": "version",          // bumps versionCode/buildNumber
+      "autoIncrement": "version",          
       "android": { "buildType": "app-bundle" }
     }
   },
