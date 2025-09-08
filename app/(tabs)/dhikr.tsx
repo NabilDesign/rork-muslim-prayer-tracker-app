@@ -27,9 +27,10 @@ import {
   Filter,
   X,
 } from 'lucide-react-native';
+import Svg, { Circle } from 'react-native-svg';
 import { useDhikrStore } from '@/src/store/dhikr-store';
 
-// OPTIONAL haptics (Expo). In bare RN valt dit netjes weg.
+// OPTIONAL: haptics (werkt automatisch in Expo; anders graceful fallback)
 let Haptics: any = null;
 try {
   // @ts-ignore
@@ -46,7 +47,6 @@ interface DhikrItem {
 }
 
 const AVAILABLE_DHIKR: DhikrItem[] = [
-  // --- zelfde dataset als jouw originele, licht ingekort voor leesbaarheid ---
   { id: '1', text: 'سُبْحَانَ اللَّهِ', transliteration: 'Subhan Allah', translation: 'Glory be to Allah', count: 33, category: 'Tasbih' },
   { id: '2', text: 'الْحَمْدُ لِلَّهِ', transliteration: 'Alhamdulillah', translation: 'Praise be to Allah', count: 33, category: 'Tahmid' },
   { id: '3', text: 'اللَّهُ أَكْبَرُ', transliteration: 'Allahu Akbar', translation: 'Allah is the Greatest', count: 34, category: 'Takbir' },
@@ -55,35 +55,52 @@ const AVAILABLE_DHIKR: DhikrItem[] = [
   { id: '6', text: 'سُبْحَانَ اللَّهِ الْعَظِيمِ', transliteration: 'Subhan Allahi al-Azeem', translation: 'Glory be to Allah, the Magnificent', count: 100, category: 'Tasbih' },
   { id: '7', text: 'سُبْحَانَ اللَّهِ وَبِحَمْدِهِ سُبْحَانَ اللَّهِ الْعَظِيمِ', transliteration: 'Subhan Allahi wa bihamdihi, Subhan Allahi al-Azeem', translation: 'Glory be to Allah and praise Him, Glory be to Allah the Magnificent', count: 100, category: 'Tasbih' },
   { id: '8', text: 'أَسْتَغْفِرُ اللَّهَ', transliteration: 'Astaghfirullah', translation: 'I seek forgiveness from Allah', count: 100, category: 'Istighfar' },
-  { id: '9', text: 'أَسْتَغْفِرُ اللَّهَ الْعَظِيمَ ...', transliteration: 'Astaghfirullah al-Azeem ...', translation: 'I seek forgiveness from Allah the Mighty...', count: 100, category: 'Istighfar' },
-  { id: '10', text: 'رَبِّ اغْفِرْ لِي ...', transliteration: 'Rabbi ghfir li ...', translation: 'My Lord, forgive me...', count: 100, category: 'Istighfar' },
+  { id: '9', text: 'أَسْتَغْفِرُ اللَّهَ الْعَظِيمَ الَّذِي لَا إِلَهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ وَأَتُوبُ إِلَيْهِ', transliteration: 'Astaghfirullah al-Azeem ...', translation: 'I seek forgiveness from Allah the Mighty ...', count: 100, category: 'Istighfar' },
+  { id: '10', text: 'رَبِّ اغْفِرْ لِي وَتُبْ عَلَيَّ إِنَّكَ أَنْتَ التَّوَّابُ الرَّحِيمُ', transliteration: 'Rabbi ghfir li ...', translation: 'My Lord, forgive me ...', count: 100, category: 'Istighfar' },
   { id: '11', text: 'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ', transliteration: 'Allahumma salli ala Muhammad', translation: 'O Allah, send blessings upon Muhammad', count: 100, category: 'Salawat' },
-  { id: '12', text: 'اللَّهُمَّ صَلِّ وَسَلِّمْ ...', transliteration: 'Allahumma salli wa sallim ...', translation: 'O Allah, send blessings and peace...', count: 100, category: 'Salawat' },
-  { id: '13', text: 'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ ...', transliteration: 'Allahumma salli ala Muhammad ...', translation: 'O Allah, send blessings upon Muhammad and family', count: 100, category: 'Salawat' },
-  { id: '14', text: 'لَا حَوْلَ وَلَا قُوَّةَ ...', transliteration: 'La hawla wa la quwwata ...', translation: 'There is no power except with Allah', count: 100, category: 'Hawqala' },
-  { id: '15', text: 'حَسْبُنَا اللَّهُ ...', transliteration: "Hasbuna Allahu wa ni'ma al-wakeel", translation: 'Allah is sufficient for us...', count: 100, category: 'Tawakkul' },
-  { id: '16', text: 'لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ ...', transliteration: 'La ilaha illa Allah wahdahu ...', translation: 'There is no god but Allah alone...', count: 100, category: 'Tahlil' },
-  { id: '17', text: 'لَا إِلَهَ إِلَّا اللَّهُ ... قَدِيرٌ', transliteration: "La ilaha illa Allah ... qadeer", translation: 'There is no god but Allah ... all things', count: 100, category: 'Tahlil' },
+  { id: '12', text: 'اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَى نَبِيِّنَا مُحَمَّدٍ', transliteration: 'Allahumma salli wa sallim ...', translation: 'Send blessings and peace ...', count: 100, category: 'Salawat' },
+  { id: '13', text: 'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَعَلَى آلِ مُحَمَّدٍ', transliteration: 'Allahumma salli ala Muhammad ...', translation: 'Blessings upon Muhammad and family', count: 100, category: 'Salawat' },
+  { id: '14', text: 'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ', transliteration: 'La hawla wa la quwwata ...', translation: 'No power except with Allah', count: 100, category: 'Hawqala' },
+  { id: '15', text: 'حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ', transliteration: "Hasbuna Allahu wa ni'ma al-wakeel", translation: 'Allah is sufficient for us ...', count: 100, category: 'Tawakkul' },
+  { id: '16', text: 'لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ', transliteration: 'La ilaha illa Allah wahdahu ...', translation: 'No partner with Him', count: 100, category: 'Tahlil' },
+  { id: '17', text: 'لَا إِلَهَ إِلَّا اللَّهُ ... وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ', transliteration: "La ilaha illa Allah ... qadeer", translation: 'Able to do all things', count: 100, category: 'Tahlil' },
   { id: '18', text: 'يَا رَحْمَانُ', transliteration: 'Ya Rahman', translation: 'O Most Merciful', count: 100, category: 'Asma ul-Husna' },
   { id: '19', text: 'يَا رَحِيمُ', transliteration: 'Ya Raheem', translation: 'O Most Compassionate', count: 100, category: 'Asma ul-Husna' },
   { id: '20', text: 'يَا غَفَّارُ', transliteration: 'Ya Ghaffar', translation: 'O Oft-Forgiving', count: 100, category: 'Asma ul-Husna' },
   { id: '21', text: 'يَا كَرِيمُ', transliteration: 'Ya Kareem', translation: 'O Most Generous', count: 100, category: 'Asma ul-Husna' },
   { id: '22', text: 'يَا لَطِيفُ', transliteration: 'Ya Lateef', translation: 'O Most Gentle', count: 100, category: 'Asma ul-Husna' },
-  { id: '23', text: 'رَبَّنَا آتِنَا ...', transliteration: "Rabbana atina ...", translation: 'Our Lord, give us good...', count: 100, category: 'Dua' },
-  { id: '24', text: 'رَبِّ اشْرَحْ لِي ...', transliteration: 'Rabbi shrah li ...', translation: 'My Lord, expand my chest...', count: 100, category: 'Dua' },
-  { id: '25', text: 'رَبِّ زِدْنِي عِلْمًا', transliteration: 'Rabbi zidni ilma', translation: 'My Lord, increase me in knowledge', count: 100, category: 'Dua' },
-  { id: '26', text: 'رَبَّنَا لَا تُزِغْ قُلُوبَنَا ...', transliteration: 'Rabbana la tuzigh qulubana ...', translation: 'Our Lord, do not let our hearts deviate...', count: 100, category: 'Dua' },
-  { id: '27', text: 'أَعُوذُ بِاللَّهِ ...', transliteration: "A'udhu billahi ...", translation: 'I seek refuge in Allah...', count: 3, category: 'Protection' },
-  { id: '28', text: 'بِسْمِ اللَّهِ الَّذِي ...', transliteration: "Bismillahi'lladhi ...", translation: 'In the name of Allah ...', count: 3, category: 'Protection' },
-  { id: '29', text: 'اللَّهُمَّ أَنْتَ رَبِّي ...', transliteration: 'Allahumma anta rabbi ...', translation: 'O Allah, You are my Lord...', count: 1, category: 'Morning/Evening' },
-  { id: '30', text: 'رَضِيتُ بِاللَّهِ ...', transliteration: 'Radeetu billahi ...', translation: 'I am pleased with Allah ...', count: 3, category: 'Morning/Evening' },
+  { id: '23', text: 'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً ...', transliteration: "Rabbana atina ...", translation: 'Give us good ...', count: 100, category: 'Dua' },
+  { id: '24', text: 'رَبِّ اشْرَحْ لِي صَدْرِي ...', transliteration: 'Rabbi shrah li ...', translation: 'Expand my chest ...', count: 100, category: 'Dua' },
+  { id: '25', text: 'رَبِّ زِدْنِي عِلْمًا', transliteration: 'Rabbi zidni ilma', translation: 'Increase me in knowledge', count: 100, category: 'Dua' },
+  { id: '26', text: 'رَبَّنَا لَا تُزِغْ قُلُوبَنَا ...', transliteration: 'Rabbana la tuzigh qulubana ...', translation: 'Do not let our hearts deviate', count: 100, category: 'Dua' },
+  { id: '27', text: 'أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ', transliteration: "A'udhu billahi ...", translation: 'Refuge from Satan', count: 3, category: 'Protection' },
+  { id: '28', text: 'بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ ...', transliteration: "Bismillahi'lladhi ...", translation: 'In the name of Allah ...', count: 3, category: 'Protection' },
+  { id: '29', text: 'اللَّهُمَّ أَنْتَ رَبِّي ...', transliteration: 'Allahumma anta rabbi ...', translation: 'You are my Lord ...', count: 1, category: 'Morning/Evening' },
+  { id: '30', text: 'رَضِيتُ بِاللَّهِ رَبًّا ...', transliteration: 'Radeetu billahi ...', translation: 'I am pleased with Allah ...', count: 3, category: 'Morning/Evening' },
 ];
 
 const CATEGORIES = ['All', ...Array.from(new Set(AVAILABLE_DHIKR.map(d => d.category)))];
 
+// Category color accents
+const CAT_COLORS: Record<string, string> = {
+  Tasbih: '#10B981',
+  Tahmid: '#3B82F6',
+  Takbir: '#F59E0B',
+  Tahlil: '#6366F1',
+  Istighfar: '#14B8A6',
+  Salawat: '#EC4899',
+  Hawqala: '#22C55E',
+  Tawakkul: '#0EA5E9',
+  'Asma ul-Husna': '#A855F7',
+  Dua: '#06B6D4',
+  Protection: '#F97316',
+  'Morning/Evening': '#84CC16',
+};
+
 export default function DhikrScreen() {
   const {
     routines,
+    sessions,
     activeRoutine,
     currentDhikrIndex,
     currentCount,
@@ -95,6 +112,9 @@ export default function DhikrScreen() {
     resetRoutine,
     incrementCount,
     nextDhikr,
+    // optional helpers present in store
+    getStreakDays,
+    getTodaysSessions,
   } = useDhikrStore();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -104,22 +124,50 @@ export default function DhikrScreen() {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<string>('All');
 
-  // Smooth progress animation
-  const progressAnim = useRef(new Animated.Value(0)).current;
-  const progress = activeRoutine ? (currentDhikrIndex / Math.max(1, activeRoutine.dhikrList.length)) : 0;
+  // ------- Progress (routine & ring) -------
+  const routineProgressAnim = useRef(new Animated.Value(0)).current;
+  const routineProgress = activeRoutine ? (currentDhikrIndex / Math.max(1, activeRoutine.dhikrList.length)) : 0;
 
   useEffect(() => {
-    Animated.timing(progressAnim, {
-      toValue: progress,
+    Animated.timing(routineProgressAnim, {
+      toValue: routineProgress,
       duration: 500,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: false,
     }).start();
-  }, [progress]);
+  }, [routineProgress]);
 
   const currentDhikr = activeRoutine?.dhikrList[currentDhikrIndex];
+  const currentDhikrTarget = currentDhikr?.count ?? 1;
+  const dhikrProgress = Math.min(1, currentCount / Math.max(1, currentDhikrTarget));
+  const ringAnim = useRef(new Animated.Value(dhikrProgress)).current;
 
-  // Filtering for modal
+  useEffect(() => {
+    Animated.timing(ringAnim, {
+      toValue: dhikrProgress,
+      duration: 450,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+  }, [dhikrProgress]);
+
+  // ------- Stats (streak / today / total) -------
+  const streakDays = typeof getStreakDays === 'function' ? getStreakDays() : 0;
+  const todaySessions = typeof getTodaysSessions === 'function'
+    ? getTodaysSessions()
+    : (sessions || []).filter((s: any) => {
+        const d = new Date(s.startTime || s.date || s.createdAt || 0);
+        const now = new Date();
+        return (
+          d.getFullYear() === now.getFullYear() &&
+          d.getMonth() === now.getMonth() &&
+          d.getDate() === now.getDate()
+        );
+      });
+
+  const totalCompleted = (sessions || []).length;
+
+  // ------- Modal filtering -------
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return AVAILABLE_DHIKR.filter(d => {
@@ -142,7 +190,7 @@ export default function DhikrScreen() {
     return Object.keys(by).sort().map(k => ({ title: k, data: by[k] }));
   }, [filtered]);
 
-  // Actions
+  // ------- Actions -------
   const onTapCount = () => {
     if (Haptics?.impactAsync) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     incrementCount();
@@ -154,7 +202,7 @@ export default function DhikrScreen() {
   const onTogglePlay = () => {
     if (!activeRoutine) return;
     if (isActive) pauseRoutine();
-    else startRoutine(activeRoutine.id); // resume/start fix
+    else startRoutine(activeRoutine.id); // resume/start
   };
 
   const handleCreateRoutine = () => {
@@ -187,6 +235,18 @@ export default function DhikrScreen() {
     setCustomCounts(prev => ({ ...prev, [id]: Math.max(1, count || 1) }));
   };
 
+  // ------- Ring progress helper -------
+  const RING_SIZE = 180;
+  const STROKE = 12;
+  const radius = (RING_SIZE - STROKE) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const ringColor = CAT_COLORS[currentDhikr?.category || 'Tasbih'] || COLORS.primary;
+
+  const dashOffset = ringAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [circumference, 0],
+  });
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -205,15 +265,34 @@ export default function DhikrScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        {/* Active Routine Card */}
+        {/* Stats */}
+        <View style={styles.statsRow}>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Streak</Text>
+            <Text style={styles.statValue}>{streakDays}</Text>
+            <Text style={styles.statSub}>dagen</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Vandaag</Text>
+            <Text style={styles.statValue}>{Array.isArray(todaySessions) ? todaySessions.length : 0}</Text>
+            <Text style={styles.statSub}>sessies</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Totaal</Text>
+            <Text style={styles.statValue}>{totalCompleted}</Text>
+            <Text style={styles.statSub}>afgerond</Text>
+          </View>
+        </View>
+
+        {/* Active Routine */}
         {activeRoutine ? (
           <View style={styles.activeCard}>
-            {/* Sub-header */}
             <View style={styles.activeHeader}>
               <View>
                 <Text style={styles.activeName}>{activeRoutine.name}</Text>
                 <Text style={styles.activeMeta}>
-                  {currentDhikrIndex + 1} / {activeRoutine.dhikrList.length} • {activeRoutine.dhikrList.reduce((s, d) => s + d.count, 0)} totaal
+                  {currentDhikrIndex + 1} / {activeRoutine.dhikrList.length} •{' '}
+                  {activeRoutine.dhikrList.reduce((s, d) => s + d.count, 0)} totaal
                 </Text>
               </View>
               <View style={styles.controlsRow}>
@@ -241,14 +320,14 @@ export default function DhikrScreen() {
               </View>
             </View>
 
-            {/* Progress */}
+            {/* Routine progress bar */}
             <View style={styles.progressWrap}>
               <View style={styles.progressTrack}>
                 <Animated.View
                   style={[
                     styles.progressFill,
                     {
-                      width: progressAnim.interpolate({
+                      width: routineProgressAnim.interpolate({
                         inputRange: [0, 1],
                         outputRange: ['0%', '100%'],
                       }),
@@ -258,31 +337,64 @@ export default function DhikrScreen() {
               </View>
             </View>
 
-            {/* Dhikr display */}
-            <View style={styles.dhikrArea}>
-              <Text style={styles.arabic} accessibilityLabel="Dhikr (Arabisch)">
-                {currentDhikr?.text}
-              </Text>
-              <Text style={styles.translit}>{currentDhikr?.transliteration}</Text>
-              <Text style={styles.translation}>{currentDhikr?.translation}</Text>
+            {/* Ring + Dhikr */}
+            <View style={styles.ringRow}>
+              <View style={styles.ringWrap}>
+                <Svg width={RING_SIZE} height={RING_SIZE}>
+                  <Circle
+                    cx={RING_SIZE / 2}
+                    cy={RING_SIZE / 2}
+                    r={radius}
+                    stroke={COLORS.track}
+                    strokeWidth={STROKE}
+                    fill="none"
+                  />
+                  <AnimatedCircle
+                    cx={RING_SIZE / 2}
+                    cy={RING_SIZE / 2}
+                    r={radius}
+                    stroke={ringColor}
+                    strokeWidth={STROKE}
+                    strokeLinecap="round"
+                    fill="none"
+                    strokeDasharray={`${circumference} ${circumference}`}
+                    strokeDashoffset={dashOffset as unknown as number}
+                  />
+                </Svg>
 
-              <View style={styles.counterPill}>
-                <Text style={styles.counterText}>
-                  {currentCount} <Text style={styles.counterTotal}>/ {currentDhikr?.count}</Text>
-                </Text>
+                <View style={styles.ringCenter}>
+                  <Text style={styles.counterBig}>{currentCount}</Text>
+                  <Text style={styles.counterSmall}>/ {currentDhikrTarget}</Text>
+                </View>
               </View>
 
-              <Pressable
-                onPress={onTapCount}
-                onLongPress={onLongPressCount}
-                android_ripple={{ color: 'rgba(0,0,0,0.06)' }}
-                style={({ pressed }) => [styles.countBtn, pressed && styles.countBtnPressed]}
-                accessibilityRole="button"
-                accessibilityLabel="Tel tik"
-              >
-                <Text style={styles.countLabel}>TAP TO COUNT</Text>
-                <Text style={styles.countHint}>Long-press = +10</Text>
-              </Pressable>
+              <View style={styles.dhikrInfo}>
+                <View style={[styles.catBadge, { backgroundColor: toSoft(ringColor) }]}>
+                  <Text style={[styles.catBadgeText, { color: ringColor }]}>
+                    {currentDhikr?.category}
+                  </Text>
+                </View>
+
+                <Text style={styles.arabic} accessibilityLabel="Dhikr (Arabisch)">
+                  {currentDhikr?.text}
+                </Text>
+                <Text style={[styles.translit, { color: ringColor }]}>
+                  {currentDhikr?.transliteration}
+                </Text>
+                <Text style={styles.translation}>{currentDhikr?.translation}</Text>
+
+                <Pressable
+                  onPress={onTapCount}
+                  onLongPress={onLongPressCount}
+                  android_ripple={{ color: 'rgba(0,0,0,0.06)' }}
+                  style={({ pressed }) => [styles.countBtn, pressed && styles.countBtnPressed]}
+                  accessibilityRole="button"
+                  accessibilityLabel="Tel tik"
+                >
+                  <Text style={styles.countLabel}>TAP TO COUNT</Text>
+                  <Text style={styles.countHint}>Long-press = +10</Text>
+                </Pressable>
+              </View>
             </View>
           </View>
         ) : (
@@ -301,32 +413,43 @@ export default function DhikrScreen() {
               <Text style={styles.emptyHelp}>Tik op + om je eerste routine te maken</Text>
             </View>
           ) : (
-            routines.map((r: any) => (
-              <View key={r.id} style={styles.routineCard} accessible accessibilityRole="button">
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.routineName}>{r.name}</Text>
-                  <Text style={styles.routineMeta}>
-                    {r.dhikrList.length} dhikr • {r.dhikrList.reduce((sum: number, d: any) => sum + d.count, 0)} totaal
-                  </Text>
+            routines.map((r: any) => {
+              const total = r.dhikrList.reduce((sum: number, d: DhikrItem) => sum + d.count, 0);
+              return (
+                <View key={r.id} style={styles.routineCard} accessible accessibilityRole="button">
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.routineName}>{r.name}</Text>
+                    <Text style={styles.routineMeta}>
+                      {r.dhikrList.length} dhikr • {total} totaal
+                    </Text>
+                    {/* categorie badges */}
+                    <View style={styles.badgeRow}>
+                      {[...new Set(r.dhikrList.map((d: DhikrItem) => d.category))].slice(0, 4).map((cat: string) => (
+                        <View key={cat} style={[styles.badge, { backgroundColor: toSoft(CAT_COLORS[cat] || COLORS.primary) }]}>
+                          <Text style={[styles.badgeText, { color: CAT_COLORS[cat] || COLORS.primary }]}>{cat}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                  <View style={styles.routineActions}>
+                    <Pressable
+                      onPress={() => startRoutine(r.id)}
+                      style={({ pressed }) => [styles.iconBtn, styles.primarySoft, pressed && styles.pressed]}
+                      accessibilityLabel={`Start ${r.name}`}
+                    >
+                      <Play color={COLORS.primaryDark} size={18} />
+                    </Pressable>
+                    <Pressable
+                      onPress={() => deleteRoutine(r.id)}
+                      style={({ pressed }) => [styles.iconBtn, styles.dangerSoft, pressed && styles.pressed]}
+                      accessibilityLabel={`Verwijder ${r.name}`}
+                    >
+                      <Trash2 color={COLORS.dangerDark} size={18} />
+                    </Pressable>
+                  </View>
                 </View>
-                <View style={styles.routineActions}>
-                  <Pressable
-                    onPress={() => startRoutine(r.id)}
-                    style={({ pressed }) => [styles.iconBtn, styles.primarySoft, pressed && styles.pressed]}
-                    accessibilityLabel={`Start ${r.name}`}
-                  >
-                    <Play color={COLORS.primaryDark} size={18} />
-                  </Pressable>
-                  <Pressable
-                    onPress={() => deleteRoutine(r.id)}
-                    style={({ pressed }) => [styles.iconBtn, styles.dangerSoft, pressed && styles.pressed]}
-                    accessibilityLabel={`Verwijder ${r.name}`}
-                  >
-                    <Trash2 color={COLORS.dangerDark} size={18} />
-                  </Pressable>
-                </View>
-              </View>
-            ))
+              );
+            })
           )}
         </View>
       </ScrollView>
@@ -418,6 +541,7 @@ export default function DhikrScreen() {
               )}
               renderItem={({ item }) => {
                 const isSelected = selectedDhikr.includes(item.id);
+                const c = CAT_COLORS[item.category] || COLORS.primary;
                 return (
                   <Pressable
                     onPress={() => toggleDhikrSelection(item.id)}
@@ -426,8 +550,11 @@ export default function DhikrScreen() {
                     accessibilityState={{ checked: isSelected }}
                   >
                     <View style={{ flex: 1 }}>
+                      <View style={[styles.badge, { alignSelf: 'flex-start', backgroundColor: toSoft(c) }]}>
+                        <Text style={[styles.badgeText, { color: c }]}>{item.category}</Text>
+                      </View>
                       <Text style={styles.optArabic}>{item.text}</Text>
-                      <Text style={styles.optTranslit}>{item.transliteration}</Text>
+                      <Text style={[styles.optTranslit, { color: c }]}>{item.transliteration}</Text>
                       <Text style={styles.optTranslation}>{item.translation}</Text>
 
                       {isSelected && (
@@ -473,16 +600,25 @@ export default function DhikrScreen() {
   );
 }
 
+// Animated SVG Circle
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
+// Helper: make a soft background tint from a vivid color
+function toSoft(hex: string) {
+  // Simple alpha-tinted white mix
+  return '#F4FBF8'; // unified soft; could compute mix if needed
+}
+
 /** LIGHT “TECHY” THEME **/
 const COLORS = {
-  bg: '#F7FAFC', // licht, clean
+  bg: '#F7FAFC',
   card: '#FFFFFF',
   glass: 'rgba(255,255,255,0.86)',
   border: '#E5EEF6',
   ink: '#0F172A',
   sub: '#64748B',
   subtle: '#94A3B8',
-  primary: '#10B981', // emerald
+  primary: '#10B981',
   primaryDark: '#065F46',
   primarySoftBg: '#ECFDF5',
   warn: '#F59E0B',
@@ -519,6 +655,18 @@ const styles = StyleSheet.create({
 
   content: { padding: 16, paddingBottom: 32 },
 
+  // Stats
+  statsRow: { flexDirection: 'row', gap: 12, marginBottom: 12 },
+  statCard: {
+    flex: 1, backgroundColor: COLORS.card, borderRadius: 14, paddingVertical: 12, paddingHorizontal: 14,
+    borderWidth: 1, borderColor: COLORS.border,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 1,
+    alignItems: 'center',
+  },
+  statLabel: { color: COLORS.sub, fontWeight: '700', fontSize: 12 },
+  statValue: { color: COLORS.ink, fontWeight: '900', fontSize: 22, marginTop: 2 },
+  statSub: { color: COLORS.subtle, fontSize: 12, marginTop: 2 },
+
   iconBtn: {
     width: 40, height: 40, borderRadius: 12,
     alignItems: 'center', justifyContent: 'center',
@@ -538,7 +686,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
     marginBottom: 16,
-    // glossy shadow
     shadowColor: '#A3B7D6',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
@@ -566,26 +713,33 @@ const styles = StyleSheet.create({
   },
   progressFill: { height: '100%', backgroundColor: COLORS.fill },
 
-  dhikrArea: { alignItems: 'center', paddingVertical: 8 },
-  arabic: {
-    fontSize: 28, lineHeight: 40, textAlign: 'center',
-    color: COLORS.ink, fontWeight: '800', marginBottom: 6,
+  ringRow: { flexDirection: 'row', gap: 16, alignItems: 'center' },
+  ringWrap: {
+    width: 180, height: 180, borderRadius: 20,
+    alignItems: 'center', justifyContent: 'center',
   },
-  translit: { fontSize: 15, color: COLORS.primaryDark, fontWeight: '700', marginBottom: 4, textAlign: 'center' },
-  translation: { fontSize: 14, color: COLORS.sub, fontStyle: 'italic', textAlign: 'center', marginBottom: 12 },
+  ringCenter: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
+  counterBig: { color: COLORS.ink, fontWeight: '900', fontSize: 28, lineHeight: 34 },
+  counterSmall: { color: COLORS.sub, fontWeight: '700' },
 
-  counterPill: {
-    backgroundColor: '#F5FBF9',
-    borderColor: COLORS.border, borderWidth: 1,
-    paddingHorizontal: 18, paddingVertical: 10, borderRadius: 999, marginBottom: 16,
+  dhikrInfo: { flex: 1 },
+  catBadge: {
+    alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4, marginBottom: 8,
+    borderWidth: 1, borderColor: COLORS.border,
   },
-  counterText: { color: COLORS.ink, fontSize: 20, fontWeight: '900' },
-  counterTotal: { color: COLORS.sub, fontWeight: '700' },
+  catBadgeText: { fontWeight: '800', fontSize: 12 },
+
+  arabic: {
+    fontSize: 24, lineHeight: 36, textAlign: 'left',
+    color: COLORS.ink, fontWeight: '800', marginBottom: 4,
+  },
+  translit: { fontSize: 14, fontWeight: '800', marginBottom: 4 },
+  translation: { fontSize: 14, color: COLORS.sub, fontStyle: 'italic', marginBottom: 12 },
 
   countBtn: {
     width: '100%',
     backgroundColor: COLORS.primary,
-    borderRadius: 14, paddingVertical: 16, alignItems: 'center',
+    borderRadius: 14, paddingVertical: 14, alignItems: 'center',
     shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.2,
@@ -594,7 +748,7 @@ const styles = StyleSheet.create({
   },
   countBtnPressed: { transform: [{ scale: 0.995 }] },
   countLabel: { color: '#fff', fontWeight: '900', letterSpacing: 1, fontSize: 16 },
-  countHint: { color: '#ECFDF5', opacity: 0.9, marginTop: 4, fontSize: 12 },
+  countHint: { color: '#ECFDF5', opacity: 0.9, marginTop: 2, fontSize: 12 },
 
   /* Empty */
   empty: {
@@ -623,6 +777,12 @@ const styles = StyleSheet.create({
   routineName: { color: COLORS.ink, fontWeight: '800', fontSize: 16 },
   routineMeta: { color: COLORS.sub, marginTop: 2 },
   routineActions: { flexDirection: 'row', gap: 8 },
+  badgeRow: { flexDirection: 'row', gap: 6, marginTop: 8, flexWrap: 'wrap' },
+  badge: {
+    paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999,
+    borderWidth: 1, borderColor: COLORS.border,
+  },
+  badgeText: { fontWeight: '800', fontSize: 11 },
 
   /* Modal */
   modalContainer: { flex: 1, backgroundColor: COLORS.bg },
