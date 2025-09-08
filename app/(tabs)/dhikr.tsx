@@ -333,6 +333,16 @@ const onSkipOrFinish = () => {
             </View>
           )}
 
+          <TouchableOpacity
+  style={styles.createRoutineButton}
+  onPress={() => setShowCreateModal(true)}
+  activeOpacity={0.85}
+>
+  <Plus color={colors.primary[600]} size={20} />
+  <Text style={styles.createRoutineText}>Create Custom Routine</Text>
+</TouchableOpacity>
+
+
           {/* All Dhikr */}
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>All Dhikr</Text>
