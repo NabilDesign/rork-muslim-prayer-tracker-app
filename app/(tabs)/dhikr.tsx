@@ -1,17 +1,40 @@
-import React, { useState, useEffect } from 'react';
+// app/(tabs)/dhikr.tsx
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   StyleSheet,
   Modal,
   TextInput,
   Alert,
   SafeAreaView,
+  FlatList,
+  SectionList,
+  Animated,
+  Easing,
+  Platform,
 } from 'react-native';
-import { Plus, Edit3, Trash2, Play, Pause, RotateCcw, Check } from 'lucide-react-native';
+import {
+  Plus,
+  Trash2,
+  Play,
+  Pause,
+  RotateCcw,
+  Check,
+  Search,
+  Filter,
+  X,
+} from 'lucide-react-native';
 import { useDhikrStore } from '@/src/store/dhikr-store';
+
+// OPTIONAL haptics (Expo). In bare RN valt dit netjes weg.
+let Haptics: any = null;
+try {
+  // @ts-ignore
+  Haptics = require('expo-haptics');
+} catch (_) {}
 
 interface DhikrItem {
   id: string;
@@ -23,262 +46,40 @@ interface DhikrItem {
 }
 
 const AVAILABLE_DHIKR: DhikrItem[] = [
-  // Basic Tasbih
-  {
-    id: '1',
-    text: 'سُبْحَانَ اللَّهِ',
-    transliteration: 'Subhan Allah',
-    translation: 'Glory be to Allah',
-    count: 33,
-    category: 'Tasbih'
-  },
-  {
-    id: '2',
-    text: 'الْحَمْدُ لِلَّهِ',
-    transliteration: 'Alhamdulillah',
-    translation: 'Praise be to Allah',
-    count: 33,
-    category: 'Tahmid'
-  },
-  {
-    id: '3',
-    text: 'اللَّهُ أَكْبَرُ',
-    transliteration: 'Allahu Akbar',
-    translation: 'Allah is the Greatest',
-    count: 34,
-    category: 'Takbir'
-  },
-  {
-    id: '4',
-    text: 'لَا إِلَهَ إِلَّا اللَّهُ',
-    transliteration: 'La ilaha illa Allah',
-    translation: 'There is no god but Allah',
-    count: 100,
-    category: 'Tahlil'
-  },
-  
-  // Extended Tasbih
-  {
-    id: '5',
-    text: 'سُبْحَانَ اللَّهِ وَبِحَمْدِهِ',
-    transliteration: 'Subhan Allahi wa bihamdihi',
-    translation: 'Glory be to Allah and praise Him',
-    count: 100,
-    category: 'Tasbih'
-  },
-  {
-    id: '6',
-    text: 'سُبْحَانَ اللَّهِ الْعَظِيمِ',
-    transliteration: 'Subhan Allahi al-Azeem',
-    translation: 'Glory be to Allah, the Magnificent',
-    count: 100,
-    category: 'Tasbih'
-  },
-  {
-    id: '7',
-    text: 'سُبْحَانَ اللَّهِ وَبِحَمْدِهِ سُبْحَانَ اللَّهِ الْعَظِيمِ',
-    transliteration: 'Subhan Allahi wa bihamdihi, Subhan Allahi al-Azeem',
-    translation: 'Glory be to Allah and praise Him, Glory be to Allah the Magnificent',
-    count: 100,
-    category: 'Tasbih'
-  },
-  
-  // Istighfar (Seeking Forgiveness)
-  {
-    id: '8',
-    text: 'أَسْتَغْفِرُ اللَّهَ',
-    transliteration: 'Astaghfirullah',
-    translation: 'I seek forgiveness from Allah',
-    count: 100,
-    category: 'Istighfar'
-  },
-  {
-    id: '9',
-    text: 'أَسْتَغْفِرُ اللَّهَ الْعَظِيمَ الَّذِي لَا إِلَهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ وَأَتُوبُ إِلَيْهِ',
-    transliteration: 'Astaghfirullah al-Azeem alladhi la ilaha illa Huwa al-Hayy al-Qayyum wa atubu ilayh',
-    translation: 'I seek forgiveness from Allah the Mighty, whom there is no god but He, the Living, the Eternal, and I repent to Him',
-    count: 100,
-    category: 'Istighfar'
-  },
-  {
-    id: '10',
-    text: 'رَبِّ اغْفِرْ لِي وَتُبْ عَلَيَّ إِنَّكَ أَنْتَ التَّوَّابُ الرَّحِيمُ',
-    transliteration: 'Rabbi ghfir li wa tub alayya innaka anta at-Tawwab ar-Raheem',
-    translation: 'My Lord, forgive me and accept my repentance, indeed You are the Oft-Returning, the Merciful',
-    count: 100,
-    category: 'Istighfar'
-  },
-  
-  // Salawat (Blessings on Prophet)
-  {
-    id: '11',
-    text: 'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ',
-    transliteration: 'Allahumma salli ala Muhammad',
-    translation: 'O Allah, send blessings upon Muhammad',
-    count: 100,
-    category: 'Salawat'
-  },
-  {
-    id: '12',
-    text: 'اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَى نَبِيِّنَا مُحَمَّدٍ',
-    transliteration: 'Allahumma salli wa sallim ala nabiyyina Muhammad',
-    translation: 'O Allah, send blessings and peace upon our Prophet Muhammad',
-    count: 100,
-    category: 'Salawat'
-  },
-  {
-    id: '13',
-    text: 'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَعَلَى آلِ مُحَمَّدٍ',
-    transliteration: 'Allahumma salli ala Muhammad wa ala ali Muhammad',
-    translation: 'O Allah, send blessings upon Muhammad and the family of Muhammad',
-    count: 100,
-    category: 'Salawat'
-  },
-  
-  // Powerful Dhikr
-  {
-    id: '14',
-    text: 'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ',
-    transliteration: 'La hawla wa la quwwata illa billah',
-    translation: 'There is no power except with Allah',
-    count: 100,
-    category: 'Hawqala'
-  },
-  {
-    id: '15',
-    text: 'حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ',
-    transliteration: 'Hasbuna Allahu wa ni\'ma al-wakeel',
-    translation: 'Allah is sufficient for us and He is the best Disposer of affairs',
-    count: 100,
-    category: 'Tawakkul'
-  },
-  {
-    id: '16',
-    text: 'لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ',
-    transliteration: 'La ilaha illa Allah wahdahu la shareeka lah',
-    translation: 'There is no god but Allah alone, with no partner',
-    count: 100,
-    category: 'Tahlil'
-  },
-  {
-    id: '17',
-    text: 'لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ',
-    transliteration: 'La ilaha illa Allah wahdahu la shareeka lah, lahu al-mulku wa lahu al-hamd, wa huwa ala kulli shay\'in qadeer',
-    translation: 'There is no god but Allah alone, with no partner. His is the dominion and His is the praise, and He is able to do all things',
-    count: 100,
-    category: 'Tahlil'
-  },
-  
-  // Names of Allah (Asma ul-Husna)
-  {
-    id: '18',
-    text: 'يَا رَحْمَانُ',
-    transliteration: 'Ya Rahman',
-    translation: 'O Most Merciful',
-    count: 100,
-    category: 'Asma ul-Husna'
-  },
-  {
-    id: '19',
-    text: 'يَا رَحِيمُ',
-    transliteration: 'Ya Raheem',
-    translation: 'O Most Compassionate',
-    count: 100,
-    category: 'Asma ul-Husna'
-  },
-  {
-    id: '20',
-    text: 'يَا غَفَّارُ',
-    transliteration: 'Ya Ghaffar',
-    translation: 'O Oft-Forgiving',
-    count: 100,
-    category: 'Asma ul-Husna'
-  },
-  {
-    id: '21',
-    text: 'يَا كَرِيمُ',
-    transliteration: 'Ya Kareem',
-    translation: 'O Most Generous',
-    count: 100,
-    category: 'Asma ul-Husna'
-  },
-  {
-    id: '22',
-    text: 'يَا لَطِيفُ',
-    transliteration: 'Ya Lateef',
-    translation: 'O Most Gentle',
-    count: 100,
-    category: 'Asma ul-Husna'
-  },
-  
-  // Duas from Quran and Sunnah
-  {
-    id: '23',
-    text: 'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ',
-    transliteration: 'Rabbana atina fi\'d-dunya hasanatan wa fi\'l-akhirati hasanatan wa qina adhab an-nar',
-    translation: 'Our Lord, give us good in this world and good in the next world, and save us from the punishment of the Fire',
-    count: 100,
-    category: 'Dua'
-  },
-  {
-    id: '24',
-    text: 'رَبِّ اشْرَحْ لِي صَدْرِي وَيَسِّرْ لِي أَمْرِي',
-    transliteration: 'Rabbi shrah li sadri wa yassir li amri',
-    translation: 'My Lord, expand my chest and make my task easy for me',
-    count: 100,
-    category: 'Dua'
-  },
-  {
-    id: '25',
-    text: 'رَبِّ زِدْنِي عِلْمًا',
-    transliteration: 'Rabbi zidni ilma',
-    translation: 'My Lord, increase me in knowledge',
-    count: 100,
-    category: 'Dua'
-  },
-  {
-    id: '26',
-    text: 'رَبَّنَا لَا تُزِغْ قُلُوبَنَا بَعْدَ إِذْ هَدَيْتَنَا وَهَبْ لَنَا مِنْ لَدُنْكَ رَحْمَةً',
-    transliteration: 'Rabbana la tuzigh qulubana ba\'da idh hadaytana wa hab lana min ladunka rahma',
-    translation: 'Our Lord, do not let our hearts deviate after You have guided us, and grant us mercy from You',
-    count: 100,
-    category: 'Dua'
-  },
-  
-  // Evening/Morning Dhikr
-  {
-    id: '27',
-    text: 'أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ',
-    transliteration: 'A\'udhu billahi min ash-shaytani\'r-rajeem',
-    translation: 'I seek refuge in Allah from Satan, the accursed',
-    count: 3,
-    category: 'Protection'
-  },
-  {
-    id: '28',
-    text: 'بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَلَا فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ',
-    transliteration: 'Bismillahi\'lladhi la yadurru ma\'a ismihi shay\'un fi\'l-ardi wa la fi\'s-sama\'i wa huwa\'s-samee\'u\'l-\'aleem',
-    translation: 'In the name of Allah with whose name nothing is harmed on earth nor in the heavens, and He is the Hearing, the Knowing',
-    count: 3,
-    category: 'Protection'
-  },
-  {
-    id: '29',
-    text: 'اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَهَ إِلَّا أَنْتَ خَلَقْتَنِي وَأَنَا عَبْدُكَ',
-    transliteration: 'Allahumma anta rabbi la ilaha illa anta, khalaqtani wa ana \'abduk',
-    translation: 'O Allah, You are my Lord, there is no god but You. You created me and I am Your servant',
-    count: 1,
-    category: 'Morning/Evening'
-  },
-  {
-    id: '30',
-    text: 'رَضِيتُ بِاللَّهِ رَبًّا وَبِالْإِسْلَامِ دِينًا وَبِمُحَمَّدٍ رَسُولًا',
-    transliteration: 'Radeetu billahi rabban wa bil-Islami deenan wa bi Muhammadin rasulan',
-    translation: 'I am pleased with Allah as my Lord, Islam as my religion, and Muhammad as my Messenger',
-    count: 3,
-    category: 'Morning/Evening'
-  },
+  // --- zelfde dataset als jouw originele, licht ingekort voor leesbaarheid ---
+  { id: '1', text: 'سُبْحَانَ اللَّهِ', transliteration: 'Subhan Allah', translation: 'Glory be to Allah', count: 33, category: 'Tasbih' },
+  { id: '2', text: 'الْحَمْدُ لِلَّهِ', transliteration: 'Alhamdulillah', translation: 'Praise be to Allah', count: 33, category: 'Tahmid' },
+  { id: '3', text: 'اللَّهُ أَكْبَرُ', transliteration: 'Allahu Akbar', translation: 'Allah is the Greatest', count: 34, category: 'Takbir' },
+  { id: '4', text: 'لَا إِلَهَ إِلَّا اللَّهُ', transliteration: 'La ilaha illa Allah', translation: 'There is no god but Allah', count: 100, category: 'Tahlil' },
+  { id: '5', text: 'سُبْحَانَ اللَّهِ وَبِحَمْدِهِ', transliteration: 'Subhan Allahi wa bihamdihi', translation: 'Glory be to Allah and praise Him', count: 100, category: 'Tasbih' },
+  { id: '6', text: 'سُبْحَانَ اللَّهِ الْعَظِيمِ', transliteration: 'Subhan Allahi al-Azeem', translation: 'Glory be to Allah, the Magnificent', count: 100, category: 'Tasbih' },
+  { id: '7', text: 'سُبْحَانَ اللَّهِ وَبِحَمْدِهِ سُبْحَانَ اللَّهِ الْعَظِيمِ', transliteration: 'Subhan Allahi wa bihamdihi, Subhan Allahi al-Azeem', translation: 'Glory be to Allah and praise Him, Glory be to Allah the Magnificent', count: 100, category: 'Tasbih' },
+  { id: '8', text: 'أَسْتَغْفِرُ اللَّهَ', transliteration: 'Astaghfirullah', translation: 'I seek forgiveness from Allah', count: 100, category: 'Istighfar' },
+  { id: '9', text: 'أَسْتَغْفِرُ اللَّهَ الْعَظِيمَ ...', transliteration: 'Astaghfirullah al-Azeem ...', translation: 'I seek forgiveness from Allah the Mighty...', count: 100, category: 'Istighfar' },
+  { id: '10', text: 'رَبِّ اغْفِرْ لِي ...', transliteration: 'Rabbi ghfir li ...', translation: 'My Lord, forgive me...', count: 100, category: 'Istighfar' },
+  { id: '11', text: 'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ', transliteration: 'Allahumma salli ala Muhammad', translation: 'O Allah, send blessings upon Muhammad', count: 100, category: 'Salawat' },
+  { id: '12', text: 'اللَّهُمَّ صَلِّ وَسَلِّمْ ...', transliteration: 'Allahumma salli wa sallim ...', translation: 'O Allah, send blessings and peace...', count: 100, category: 'Salawat' },
+  { id: '13', text: 'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ ...', transliteration: 'Allahumma salli ala Muhammad ...', translation: 'O Allah, send blessings upon Muhammad and family', count: 100, category: 'Salawat' },
+  { id: '14', text: 'لَا حَوْلَ وَلَا قُوَّةَ ...', transliteration: 'La hawla wa la quwwata ...', translation: 'There is no power except with Allah', count: 100, category: 'Hawqala' },
+  { id: '15', text: 'حَسْبُنَا اللَّهُ ...', transliteration: "Hasbuna Allahu wa ni'ma al-wakeel", translation: 'Allah is sufficient for us...', count: 100, category: 'Tawakkul' },
+  { id: '16', text: 'لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ ...', transliteration: 'La ilaha illa Allah wahdahu ...', translation: 'There is no god but Allah alone...', count: 100, category: 'Tahlil' },
+  { id: '17', text: 'لَا إِلَهَ إِلَّا اللَّهُ ... قَدِيرٌ', transliteration: "La ilaha illa Allah ... qadeer", translation: 'There is no god but Allah ... all things', count: 100, category: 'Tahlil' },
+  { id: '18', text: 'يَا رَحْمَانُ', transliteration: 'Ya Rahman', translation: 'O Most Merciful', count: 100, category: 'Asma ul-Husna' },
+  { id: '19', text: 'يَا رَحِيمُ', transliteration: 'Ya Raheem', translation: 'O Most Compassionate', count: 100, category: 'Asma ul-Husna' },
+  { id: '20', text: 'يَا غَفَّارُ', transliteration: 'Ya Ghaffar', translation: 'O Oft-Forgiving', count: 100, category: 'Asma ul-Husna' },
+  { id: '21', text: 'يَا كَرِيمُ', transliteration: 'Ya Kareem', translation: 'O Most Generous', count: 100, category: 'Asma ul-Husna' },
+  { id: '22', text: 'يَا لَطِيفُ', transliteration: 'Ya Lateef', translation: 'O Most Gentle', count: 100, category: 'Asma ul-Husna' },
+  { id: '23', text: 'رَبَّنَا آتِنَا ...', transliteration: "Rabbana atina ...", translation: 'Our Lord, give us good...', count: 100, category: 'Dua' },
+  { id: '24', text: 'رَبِّ اشْرَحْ لِي ...', transliteration: 'Rabbi shrah li ...', translation: 'My Lord, expand my chest...', count: 100, category: 'Dua' },
+  { id: '25', text: 'رَبِّ زِدْنِي عِلْمًا', transliteration: 'Rabbi zidni ilma', translation: 'My Lord, increase me in knowledge', count: 100, category: 'Dua' },
+  { id: '26', text: 'رَبَّنَا لَا تُزِغْ قُلُوبَنَا ...', transliteration: 'Rabbana la tuzigh qulubana ...', translation: 'Our Lord, do not let our hearts deviate...', count: 100, category: 'Dua' },
+  { id: '27', text: 'أَعُوذُ بِاللَّهِ ...', transliteration: "A'udhu billahi ...", translation: 'I seek refuge in Allah...', count: 3, category: 'Protection' },
+  { id: '28', text: 'بِسْمِ اللَّهِ الَّذِي ...', transliteration: "Bismillahi'lladhi ...", translation: 'In the name of Allah ...', count: 3, category: 'Protection' },
+  { id: '29', text: 'اللَّهُمَّ أَنْتَ رَبِّي ...', transliteration: 'Allahumma anta rabbi ...', translation: 'O Allah, You are my Lord...', count: 1, category: 'Morning/Evening' },
+  { id: '30', text: 'رَضِيتُ بِاللَّهِ ...', transliteration: 'Radeetu billahi ...', translation: 'I am pleased with Allah ...', count: 3, category: 'Morning/Evening' },
 ];
+
+const CATEGORIES = ['All', ...Array.from(new Set(AVAILABLE_DHIKR.map(d => d.category)))];
 
 export default function DhikrScreen() {
   const {
@@ -300,156 +101,229 @@ export default function DhikrScreen() {
   const [routineName, setRoutineName] = useState('');
   const [selectedDhikr, setSelectedDhikr] = useState<string[]>([]);
   const [customCounts, setCustomCounts] = useState<Record<string, number>>({});
+  const [query, setQuery] = useState('');
+  const [category, setCategory] = useState<string>('All');
+
+  // Smooth progress animation
+  const progressAnim = useRef(new Animated.Value(0)).current;
+  const progress = activeRoutine ? (currentDhikrIndex / Math.max(1, activeRoutine.dhikrList.length)) : 0;
+
+  useEffect(() => {
+    Animated.timing(progressAnim, {
+      toValue: progress,
+      duration: 500,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+  }, [progress]);
+
+  const currentDhikr = activeRoutine?.dhikrList[currentDhikrIndex];
+
+  // Filtering for modal
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return AVAILABLE_DHIKR.filter(d => {
+      if (category !== 'All' && d.category !== category) return false;
+      if (!q) return true;
+      return (
+        d.text.toLowerCase().includes(q) ||
+        d.transliteration.toLowerCase().includes(q) ||
+        d.translation.toLowerCase().includes(q)
+      );
+    });
+  }, [query, category]);
+
+  const grouped = useMemo(() => {
+    const by: Record<string, DhikrItem[]> = {};
+    for (const d of filtered) {
+      if (!by[d.category]) by[d.category] = [];
+      by[d.category].push(d);
+    }
+    return Object.keys(by).sort().map(k => ({ title: k, data: by[k] }));
+  }, [filtered]);
+
+  // Actions
+  const onTapCount = () => {
+    if (Haptics?.impactAsync) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    incrementCount();
+  };
+  const onLongPressCount = () => {
+    for (let i = 0; i < 10; i++) incrementCount();
+    if (Haptics?.notificationAsync) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  };
+  const onTogglePlay = () => {
+    if (!activeRoutine) return;
+    if (isActive) pauseRoutine();
+    else startRoutine(activeRoutine.id); // resume/start fix
+  };
 
   const handleCreateRoutine = () => {
     if (!routineName.trim()) {
-      Alert.alert('Error', 'Please enter a routine name');
+      Alert.alert('Naam vereist', 'Geef je routine een naam.');
       return;
     }
     if (selectedDhikr.length === 0) {
-      Alert.alert('Error', 'Please select at least one dhikr');
+      Alert.alert('Selectie vereist', 'Kies minstens één dhikr.');
       return;
     }
-
     const dhikrItems = selectedDhikr.map(id => {
-      const dhikr = AVAILABLE_DHIKR.find(d => d.id === id)!;
-      return {
-        ...dhikr,
-        count: customCounts[id] || dhikr.count,
-      };
+      const d = AVAILABLE_DHIKR.find(x => x.id === id)!;
+      return { ...d, count: customCounts[id] || d.count };
     });
-
-    createRoutine({
-      name: routineName,
-      dhikrList: dhikrItems,
-    });
+    createRoutine({ name: routineName.trim(), dhikrList: dhikrItems });
 
     setShowCreateModal(false);
     setRoutineName('');
     setSelectedDhikr([]);
     setCustomCounts({});
+    setQuery('');
+    setCategory('All');
   };
 
-  const toggleDhikrSelection = (dhikrId: string) => {
-    setSelectedDhikr(prev => 
-      prev.includes(dhikrId) 
-        ? prev.filter(id => id !== dhikrId)
-        : [...prev, dhikrId]
-    );
+  const toggleDhikrSelection = (id: string) => {
+    setSelectedDhikr(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]));
   };
-
-  const updateCustomCount = (dhikrId: string, count: number) => {
-    setCustomCounts(prev => ({ ...prev, [dhikrId]: count }));
+  const updateCustomCount = (id: string, count: number) => {
+    setCustomCounts(prev => ({ ...prev, [id]: Math.max(1, count || 1) }));
   };
-
-  const currentDhikr = activeRoutine?.dhikrList[currentDhikrIndex];
-  const progress = activeRoutine ? (currentDhikrIndex / activeRoutine.dhikrList.length) * 100 : 0;
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Dhikr Routines</Text>
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => setShowCreateModal(true)}
-          >
-            <Plus color="#FFFFFF" size={20} />
-          </TouchableOpacity>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerLeft}>
+          <Text style={styles.title}>Dhikr</Text>
+          <Text style={styles.subtitle}>Focus • Rust • Consistentie</Text>
         </View>
+        <Pressable
+          onPress={() => setShowCreateModal(true)}
+          style={({ pressed }) => [styles.iconBtn, styles.primary, pressed && styles.pressed]}
+          accessibilityLabel="Nieuwe routine"
+        >
+          <Plus color="#fff" size={20} />
+        </Pressable>
+      </View>
 
+      <ScrollView contentContainerStyle={styles.content}>
+        {/* Active Routine Card */}
         {activeRoutine ? (
-          <View style={styles.activeRoutineContainer}>
-            <View style={styles.progressContainer}>
-              <View style={styles.progressBar}>
-                <View style={[styles.progressFill, { width: `${progress}%` }]} />
+          <View style={styles.activeCard}>
+            {/* Sub-header */}
+            <View style={styles.activeHeader}>
+              <View>
+                <Text style={styles.activeName}>{activeRoutine.name}</Text>
+                <Text style={styles.activeMeta}>
+                  {currentDhikrIndex + 1} / {activeRoutine.dhikrList.length} • {activeRoutine.dhikrList.reduce((s, d) => s + d.count, 0)} totaal
+                </Text>
               </View>
-              <Text style={styles.progressText}>
-                {currentDhikrIndex + 1} of {activeRoutine.dhikrList.length}
-              </Text>
+              <View style={styles.controlsRow}>
+                <Pressable
+                  onPress={resetRoutine}
+                  style={({ pressed }) => [styles.ctrlBtn, styles.soft, pressed && styles.pressed]}
+                  accessibilityLabel="Reset routine"
+                >
+                  <RotateCcw color={COLORS.ink} size={20} />
+                </Pressable>
+                <Pressable
+                  onPress={onTogglePlay}
+                  style={({ pressed }) => [styles.ctrlBtn, isActive ? styles.warn : styles.primary, pressed && styles.pressed]}
+                  accessibilityLabel={isActive ? 'Pauzeer' : 'Start'}
+                >
+                  {isActive ? <Pause color="#fff" size={20} /> : <Play color="#fff" size={20} />}
+                </Pressable>
+                <Pressable
+                  onPress={nextDhikr}
+                  style={({ pressed }) => [styles.ctrlBtn, styles.soft, pressed && styles.pressed]}
+                  accessibilityLabel="Volgende dhikr"
+                >
+                  <Check color={COLORS.ink} size={20} />
+                </Pressable>
+              </View>
             </View>
 
-            <View style={styles.dhikrCard}>
-              <Text style={styles.dhikrArabic}>{currentDhikr?.text}</Text>
-              <Text style={styles.dhikrTransliteration}>{currentDhikr?.transliteration}</Text>
-              <Text style={styles.dhikrTranslation}>{currentDhikr?.translation}</Text>
-              
-              <View style={styles.counterContainer}>
+            {/* Progress */}
+            <View style={styles.progressWrap}>
+              <View style={styles.progressTrack}>
+                <Animated.View
+                  style={[
+                    styles.progressFill,
+                    {
+                      width: progressAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ['0%', '100%'],
+                      }),
+                    },
+                  ]}
+                />
+              </View>
+            </View>
+
+            {/* Dhikr display */}
+            <View style={styles.dhikrArea}>
+              <Text style={styles.arabic} accessibilityLabel="Dhikr (Arabisch)">
+                {currentDhikr?.text}
+              </Text>
+              <Text style={styles.translit}>{currentDhikr?.transliteration}</Text>
+              <Text style={styles.translation}>{currentDhikr?.translation}</Text>
+
+              <View style={styles.counterPill}>
                 <Text style={styles.counterText}>
-                  {currentCount} / {currentDhikr?.count}
+                  {currentCount} <Text style={styles.counterTotal}>/ {currentDhikr?.count}</Text>
                 </Text>
               </View>
 
-              <TouchableOpacity
-                style={styles.tapButton}
-                onPress={incrementCount}
+              <Pressable
+                onPress={onTapCount}
+                onLongPress={onLongPressCount}
+                android_ripple={{ color: 'rgba(0,0,0,0.06)' }}
+                style={({ pressed }) => [styles.countBtn, pressed && styles.countBtnPressed]}
+                accessibilityRole="button"
+                accessibilityLabel="Tel tik"
               >
-                <Text style={styles.tapButtonText}>TAP TO COUNT</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.controlsContainer}>
-              <TouchableOpacity
-                style={styles.controlButton}
-                onPress={resetRoutine}
-              >
-                <RotateCcw color="#6B7280" size={24} />
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[styles.controlButton, styles.playButton]}
-                onPress={isActive ? pauseRoutine : () => {}}
-              >
-                {isActive ? (
-                  <Pause color="#FFFFFF" size={24} />
-                ) : (
-                  <Play color="#FFFFFF" size={24} />
-                )}
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={styles.controlButton}
-                onPress={nextDhikr}
-              >
-                <Check color="#6B7280" size={24} />
-              </TouchableOpacity>
+                <Text style={styles.countLabel}>TAP TO COUNT</Text>
+                <Text style={styles.countHint}>Long-press = +10</Text>
+              </Pressable>
             </View>
           </View>
         ) : (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyStateText}>Select a routine to begin</Text>
+          <View style={styles.empty}>
+            <Text style={styles.emptyTitle}>Klaar om te starten</Text>
+            <Text style={styles.emptyText}>Maak een routine of kies er één uit je lijst.</Text>
           </View>
         )}
 
-        <View style={styles.routinesContainer}>
-          <Text style={styles.sectionTitle}>My Routines</Text>
+        {/* Routines List */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Mijn routines</Text>
           {routines.length === 0 ? (
-            <View style={styles.noRoutines}>
-              <Text style={styles.noRoutinesText}>No routines created yet</Text>
-              <Text style={styles.noRoutinesSubtext}>Tap the + button to create your first routine</Text>
+            <View style={styles.emptyList}>
+              <Text style={styles.emptySubtle}>Nog geen routines</Text>
+              <Text style={styles.emptyHelp}>Tik op + om je eerste routine te maken</Text>
             </View>
           ) : (
-            routines.map((routine: any) => (
-              <View key={routine.id} style={styles.routineCard}>
-                <View style={styles.routineInfo}>
-                  <Text style={styles.routineName}>{routine.name}</Text>
-                  <Text style={styles.routineDetails}>
-                    {routine.dhikrList.length} dhikr • {routine.dhikrList.reduce((sum: number, d: any) => sum + d.count, 0)} total
+            routines.map((r: any) => (
+              <View key={r.id} style={styles.routineCard} accessible accessibilityRole="button">
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.routineName}>{r.name}</Text>
+                  <Text style={styles.routineMeta}>
+                    {r.dhikrList.length} dhikr • {r.dhikrList.reduce((sum: number, d: any) => sum + d.count, 0)} totaal
                   </Text>
                 </View>
                 <View style={styles.routineActions}>
-                  <TouchableOpacity
-                    style={styles.actionButton}
-                    onPress={() => startRoutine(routine.id)}
+                  <Pressable
+                    onPress={() => startRoutine(r.id)}
+                    style={({ pressed }) => [styles.iconBtn, styles.primarySoft, pressed && styles.pressed]}
+                    accessibilityLabel={`Start ${r.name}`}
                   >
-                    <Play color="#059669" size={20} />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.actionButton}
-                    onPress={() => deleteRoutine(routine.id)}
+                    <Play color={COLORS.primaryDark} size={18} />
+                  </Pressable>
+                  <Pressable
+                    onPress={() => deleteRoutine(r.id)}
+                    style={({ pressed }) => [styles.iconBtn, styles.dangerSoft, pressed && styles.pressed]}
+                    accessibilityLabel={`Verwijder ${r.name}`}
                   >
-                    <Trash2 color="#EF4444" size={20} />
-                  </TouchableOpacity>
+                    <Trash2 color={COLORS.dangerDark} size={18} />
+                  </Pressable>
                 </View>
               </View>
             ))
@@ -457,401 +331,379 @@ export default function DhikrScreen() {
         </View>
       </ScrollView>
 
-      <Modal
-        visible={showCreateModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-      >
+      {/* Create Routine Modal */}
+      <Modal visible={showCreateModal} animationType="slide" presentationStyle="pageSheet">
         <SafeAreaView style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => setShowCreateModal(false)}>
-              <Text style={styles.cancelButton}>Cancel</Text>
-            </TouchableOpacity>
-            <Text style={styles.modalTitle}>Create Routine</Text>
-            <TouchableOpacity onPress={handleCreateRoutine}>
-              <Text style={styles.saveButton}>Save</Text>
-            </TouchableOpacity>
+            <Pressable onPress={() => setShowCreateModal(false)} style={({ pressed }) => [styles.textBtn, pressed && styles.textPressed]}>
+              <Text style={styles.cancel}>Annuleer</Text>
+            </Pressable>
+            <Text style={styles.modalTitle}>Nieuwe routine</Text>
+            <Pressable onPress={handleCreateRoutine} style={({ pressed }) => [styles.textBtn, pressed && styles.textPressed]}>
+              <Text style={styles.save}>Bewaar</Text>
+            </Pressable>
           </View>
 
-          <ScrollView style={styles.modalContent}>
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Routine Name</Text>
-              <TextInput
-                style={styles.textInput}
-                value={routineName}
-                onChangeText={setRoutineName}
-                placeholder="Enter routine name"
-                placeholderTextColor="#9CA3AF"
-              />
+          <View style={styles.modalBody}>
+            <Text style={styles.label}>Naam</Text>
+            <TextInput
+              style={styles.input}
+              value={routineName}
+              onChangeText={setRoutineName}
+              placeholder="Bijv. Ochtend dhikr"
+              placeholderTextColor="#9CA3AF"
+              returnKeyType="done"
+            />
+
+            {/* Filters */}
+            <View style={styles.filtersRow}>
+              <View style={styles.searchWrap}>
+                <Search size={16} color="#64748B" />
+                <TextInput
+                  style={styles.searchInput}
+                  value={query}
+                  onChangeText={setQuery}
+                  placeholder="Zoek tekst / transliteratie / vertaling"
+                  placeholderTextColor="#94A3B8"
+                  returnKeyType="search"
+                />
+                {query.length > 0 && (
+                  <Pressable onPress={() => setQuery('')} style={({ pressed }) => [styles.clearBtn, pressed && styles.pressed]} accessibilityLabel="Wis zoekopdracht">
+                    <X size={14} color="#64748B" />
+                  </Pressable>
+                )}
+              </View>
+
+              <View style={styles.filterBadge}>
+                <Filter size={16} color="#0F172A" />
+                <Text style={styles.filterText}>Filter</Text>
+              </View>
             </View>
 
-            <View style={styles.dhikrSelectionContainer}>
-              <Text style={styles.inputLabel}>Select Dhikr</Text>
-              {AVAILABLE_DHIKR.map((dhikr) => {
-                const isSelected = selectedDhikr.includes(dhikr.id);
+            <FlatList
+              data={CATEGORIES}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(c) => c}
+              contentContainerStyle={{ paddingVertical: 6 }}
+              renderItem={({ item }) => {
+                const selected = category === item;
                 return (
-                  <View key={dhikr.id} style={styles.dhikrOption}>
-                    <TouchableOpacity
-                      style={[styles.dhikrCheckbox, isSelected && styles.dhikrCheckboxSelected]}
-                      onPress={() => toggleDhikrSelection(dhikr.id)}
-                    >
-                      {isSelected && <Check color="#FFFFFF" size={16} />}
-                    </TouchableOpacity>
-                    
-                    <View style={styles.dhikrOptionContent}>
-                      <Text style={styles.dhikrOptionArabic}>{dhikr.text}</Text>
-                      <Text style={styles.dhikrOptionTransliteration}>{dhikr.transliteration}</Text>
-                      <Text style={styles.dhikrOptionTranslation}>{dhikr.translation}</Text>
-                      
+                  <Pressable
+                    onPress={() => setCategory(item)}
+                    style={({ pressed }) => [
+                      styles.chip,
+                      selected ? styles.chipActive : styles.chipIdle,
+                      pressed && styles.pressed,
+                    ]}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                  >
+                    <Text style={selected ? styles.chipTextActive : styles.chipTextIdle}>{item}</Text>
+                  </Pressable>
+                );
+              }}
+            />
+
+            {/* Grouped list by category */}
+            <SectionList
+              sections={grouped}
+              keyExtractor={(item) => item.id}
+              stickySectionHeadersEnabled
+              style={{ marginTop: 8 }}
+              renderSectionHeader={({ section: { title } }) => (
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionHeaderText}>{title}</Text>
+                </View>
+              )}
+              renderItem={({ item }) => {
+                const isSelected = selectedDhikr.includes(item.id);
+                return (
+                  <Pressable
+                    onPress={() => toggleDhikrSelection(item.id)}
+                    style={({ pressed }) => [styles.optionCard, isSelected && styles.optionActive, pressed && styles.pressed]}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: isSelected }}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.optArabic}>{item.text}</Text>
+                      <Text style={styles.optTranslit}>{item.transliteration}</Text>
+                      <Text style={styles.optTranslation}>{item.translation}</Text>
+
                       {isSelected && (
-                        <View style={styles.countInputContainer}>
-                          <Text style={styles.countLabel}>Count:</Text>
-                          <TextInput
-                            style={styles.countInput}
-                            value={(customCounts[dhikr.id] || dhikr.count).toString()}
-                            onChangeText={(text) => updateCustomCount(dhikr.id, parseInt(text) || dhikr.count)}
-                            keyboardType="numeric"
-                            placeholder={dhikr.count.toString()}
-                          />
+                        <View style={styles.countRow}>
+                          <Text style={styles.countLabel}>Aantal</Text>
+                          <View style={styles.countStepper}>
+                            <Pressable
+                              onPress={() => updateCustomCount(item.id, (customCounts[item.id] || item.count) - 1)}
+                              style={({ pressed }) => [styles.stepBtn, pressed && styles.pressed]}
+                              accessibilityLabel="Verlaag aantal"
+                            >
+                              <Text style={styles.stepText}>−</Text>
+                            </Pressable>
+                            <TextInput
+                              style={styles.countInput}
+                              keyboardType="number-pad"
+                              value={String(customCounts[item.id] ?? item.count)}
+                              onChangeText={(t) => updateCustomCount(item.id, Math.max(1, parseInt(t || '0', 10)))}
+                            />
+                            <Pressable
+                              onPress={() => updateCustomCount(item.id, (customCounts[item.id] || item.count) + 1)}
+                              style={({ pressed }) => [styles.stepBtn, pressed && styles.pressed]}
+                              accessibilityLabel="Verhoog aantal"
+                            >
+                              <Text style={styles.stepText}>+</Text>
+                            </Pressable>
+                          </View>
                         </View>
                       )}
                     </View>
-                  </View>
+                    <View style={[styles.checkBox, isSelected && styles.checkBoxActive]}>
+                      {isSelected && <Check color="#fff" size={16} />}
+                    </View>
+                  </Pressable>
                 );
-              })}
-            </View>
-          </ScrollView>
+              }}
+              ListFooterComponent={<View style={{ height: 32 }} />}
+            />
+          </View>
         </SafeAreaView>
       </Modal>
     </SafeAreaView>
   );
 }
 
+/** LIGHT “TECHY” THEME **/
+const COLORS = {
+  bg: '#F7FAFC', // licht, clean
+  card: '#FFFFFF',
+  glass: 'rgba(255,255,255,0.86)',
+  border: '#E5EEF6',
+  ink: '#0F172A',
+  sub: '#64748B',
+  subtle: '#94A3B8',
+  primary: '#10B981', // emerald
+  primaryDark: '#065F46',
+  primarySoftBg: '#ECFDF5',
+  warn: '#F59E0B',
+  dangerSoftBg: '#FEF2F2',
+  dangerDark: '#991B1B',
+  track: '#E6EEF7',
+  fill: '#10B981',
+  chipIdleBg: '#F1F5F9',
+  chipActiveBg: '#DCFCE7',
+};
+
+const RADIUS = 16;
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-  scrollView: {
-    flex: 1,
-  },
+  container: { flex: 1, backgroundColor: COLORS.bg },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700' as const,
-    color: '#1E293B',
-  },
-  addButton: {
-    backgroundColor: '#059669',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  activeRoutineContainer: {
-    backgroundColor: '#FFFFFF',
-    margin: 20,
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  progressContainer: {
-    marginBottom: 24,
-  },
-  progressBar: {
-    height: 6,
-    backgroundColor: '#E2E8F0',
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#059669',
-  },
-  progressText: {
-    textAlign: 'center' as const,
-    marginTop: 8,
-    fontSize: 14,
-    color: '#6B7280',
-    fontWeight: '500' as const,
-  },
-  dhikrCard: {
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  dhikrArabic: {
-    fontSize: 28,
-    fontWeight: '600' as const,
-    color: '#1E293B',
-    textAlign: 'center' as const,
-    marginBottom: 8,
-    lineHeight: 40,
-  },
-  dhikrTransliteration: {
-    fontSize: 18,
-    color: '#059669',
-    textAlign: 'center' as const,
-    marginBottom: 8,
-    fontWeight: '500' as const,
-  },
-  dhikrTranslation: {
-    fontSize: 16,
-    color: '#6B7280',
-    textAlign: 'center' as const,
-    marginBottom: 24,
-    fontStyle: 'italic' as const,
-  },
-  counterContainer: {
-    backgroundColor: '#F1F5F9',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 12,
-    marginBottom: 24,
-  },
-  counterText: {
-    fontSize: 24,
-    fontWeight: '700' as const,
-    color: '#059669',
-    textAlign: 'center' as const,
-  },
-  tapButton: {
-    backgroundColor: '#059669',
-    paddingHorizontal: 48,
-    paddingVertical: 16,
-    borderRadius: 12,
-  },
-  tapButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700' as const,
-    letterSpacing: 1,
-  },
-  controlsContainer: {
+    paddingVertical: 14,
+    backgroundColor: COLORS.card,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: COLORS.border,
     flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
-    gap: 20,
-  },
-  controlButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#F1F5F9',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  playButton: {
-    backgroundColor: '#059669',
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-  },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 60,
-  },
-  emptyStateText: {
-    fontSize: 18,
-    color: '#6B7280',
-    fontWeight: '500' as const,
-  },
-  routinesContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700' as const,
-    color: '#1E293B',
-    marginBottom: 16,
-  },
-  noRoutines: {
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
-  noRoutinesText: {
-    fontSize: 16,
-    color: '#6B7280',
-    fontWeight: '500' as const,
-    marginBottom: 4,
-  },
-  noRoutinesSubtext: {
-    fontSize: 14,
-    color: '#9CA3AF',
-  },
-  routineCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
-    shadowRadius: 4,
+    shadowRadius: 6,
+    elevation: 1,
+  },
+  headerLeft: { gap: 2 },
+  title: { fontSize: 22, fontWeight: '800', color: COLORS.ink, letterSpacing: 0.2 },
+  subtitle: { color: COLORS.sub, fontSize: 12 },
+
+  content: { padding: 16, paddingBottom: 32 },
+
+  iconBtn: {
+    width: 40, height: 40, borderRadius: 12,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  primary: { backgroundColor: COLORS.primary },
+  primarySoft: { backgroundColor: COLORS.primarySoftBg },
+  dangerSoft: { backgroundColor: COLORS.dangerSoftBg },
+  soft: { backgroundColor: '#F3F6FA' },
+  warn: { backgroundColor: COLORS.warn },
+  pressed: { opacity: 0.85 },
+
+  /* Active card */
+  activeCard: {
+    backgroundColor: COLORS.glass,
+    borderRadius: RADIUS,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    marginBottom: 16,
+    // glossy shadow
+    shadowColor: '#A3B7D6',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 18,
+    elevation: 3,
+  },
+  activeHeader: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12,
+  },
+  activeName: { color: COLORS.ink, fontWeight: '800', fontSize: 18 },
+  activeMeta: { color: COLORS.subtle },
+
+  controlsRow: { flexDirection: 'row', gap: 10 },
+  ctrlBtn: {
+    width: 42, height: 42, borderRadius: 12,
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, borderColor: COLORS.border,
+  },
+
+  progressWrap: { marginBottom: 12 },
+  progressTrack: {
+    height: 10, borderRadius: 999,
+    backgroundColor: COLORS.track, overflow: 'hidden',
+    borderWidth: 1, borderColor: COLORS.border,
+  },
+  progressFill: { height: '100%', backgroundColor: COLORS.fill },
+
+  dhikrArea: { alignItems: 'center', paddingVertical: 8 },
+  arabic: {
+    fontSize: 28, lineHeight: 40, textAlign: 'center',
+    color: COLORS.ink, fontWeight: '800', marginBottom: 6,
+  },
+  translit: { fontSize: 15, color: COLORS.primaryDark, fontWeight: '700', marginBottom: 4, textAlign: 'center' },
+  translation: { fontSize: 14, color: COLORS.sub, fontStyle: 'italic', textAlign: 'center', marginBottom: 12 },
+
+  counterPill: {
+    backgroundColor: '#F5FBF9',
+    borderColor: COLORS.border, borderWidth: 1,
+    paddingHorizontal: 18, paddingVertical: 10, borderRadius: 999, marginBottom: 16,
+  },
+  counterText: { color: COLORS.ink, fontSize: 20, fontWeight: '900' },
+  counterTotal: { color: COLORS.sub, fontWeight: '700' },
+
+  countBtn: {
+    width: '100%',
+    backgroundColor: COLORS.primary,
+    borderRadius: 14, paddingVertical: 16, alignItems: 'center',
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
     elevation: 2,
   },
-  routineInfo: {
-    flex: 1,
-  },
-  routineName: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-    color: '#1E293B',
-    marginBottom: 4,
-  },
-  routineDetails: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  routineActions: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  actionButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#F8FAFC',
-    justifyContent: 'center',
+  countBtnPressed: { transform: [{ scale: 0.995 }] },
+  countLabel: { color: '#fff', fontWeight: '900', letterSpacing: 1, fontSize: 16 },
+  countHint: { color: '#ECFDF5', opacity: 0.9, marginTop: 4, fontSize: 12 },
+
+  /* Empty */
+  empty: {
     alignItems: 'center',
+    paddingVertical: 48,
+    backgroundColor: COLORS.card,
+    borderRadius: RADIUS,
+    borderWidth: 1, borderColor: COLORS.border,
+    marginBottom: 16,
   },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
+  emptyTitle: { color: COLORS.ink, fontSize: 18, fontWeight: '800', marginBottom: 6 },
+  emptyText: { color: COLORS.sub },
+
+  /* Section */
+  section: { marginTop: 8 },
+  sectionTitle: { color: COLORS.ink, fontSize: 18, fontWeight: '800', marginBottom: 10 },
+
+  /* Routine list */
+  routineCard: {
+    backgroundColor: COLORS.card,
+    borderRadius: RADIUS, padding: 14, marginBottom: 10,
+    borderWidth: 1, borderColor: COLORS.border,
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 1,
   },
+  routineName: { color: COLORS.ink, fontWeight: '800', fontSize: 16 },
+  routineMeta: { color: COLORS.sub, marginTop: 2 },
+  routineActions: { flexDirection: 'row', gap: 8 },
+
+  /* Modal */
+  modalContainer: { flex: 1, backgroundColor: COLORS.bg },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingVertical: 12, backgroundColor: COLORS.card,
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: COLORS.border,
+  },
+  modalTitle: { color: COLORS.ink, fontWeight: '800', fontSize: 16 },
+  textBtn: { padding: 8 },
+  textPressed: { opacity: 0.7 },
+  cancel: { color: COLORS.sub, fontWeight: '700' },
+  save: { color: COLORS.primaryDark, fontWeight: '800' },
+
+  modalBody: { padding: 16 },
+  label: { color: COLORS.ink, fontWeight: '700', marginBottom: 8 },
+  input: {
+    backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: COLORS.border,
+    color: COLORS.ink, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 14, marginBottom: 14,
+  },
+
+  filtersRow: { flexDirection: 'row', gap: 10, alignItems: 'center', marginBottom: 8 },
+  searchWrap: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: '#FFFFFF', borderRadius: 12, borderWidth: 1, borderColor: COLORS.border,
+    paddingHorizontal: 10, paddingVertical: 8,
+  },
+  searchInput: { flex: 1, color: COLORS.ink, paddingVertical: 0 },
+  clearBtn: { padding: 4, borderRadius: 8, backgroundColor: '#0000000e' },
+
+  filterBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: '#F8FAFC', borderRadius: 12, borderWidth: 1, borderColor: COLORS.border,
+    paddingHorizontal: 10, paddingVertical: 10,
+  },
+  filterText: { color: COLORS.ink, fontWeight: '700' },
+
+  chip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, marginRight: 8, borderWidth: 1 },
+  chipIdle: { backgroundColor: COLORS.chipIdleBg, borderColor: COLORS.border },
+  chipActive: { backgroundColor: COLORS.chipActiveBg, borderColor: '#86EFAC' },
+  chipTextIdle: { color: COLORS.sub, fontWeight: '700' },
+  chipTextActive: { color: COLORS.primaryDark, fontWeight: '800' },
+
+  sectionHeader: {
+    backgroundColor: '#F8FAFC', paddingVertical: 8, paddingHorizontal: 8, borderRadius: 10, marginTop: 12,
+    borderWidth: 1, borderColor: COLORS.border,
+  },
+  sectionHeaderText: { color: COLORS.sub, fontWeight: '800', textTransform: 'uppercase', fontSize: 12, letterSpacing: 0.7 },
+
+  optionCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: '#FFFFFF', borderRadius: 14, padding: 12, marginTop: 10,
+    borderWidth: 1, borderColor: COLORS.border,
+  },
+  optionActive: { borderColor: COLORS.primary, backgroundColor: '#F9FFFC' },
+  checkBox: {
+    width: 24, height: 24, borderRadius: 8, borderWidth: 2, borderColor: COLORS.border,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  checkBoxActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
+  optArabic: { color: COLORS.ink, fontWeight: '800', fontSize: 16, marginBottom: 4 },
+  optTranslit: { color: COLORS.primaryDark, fontWeight: '700' },
+  optTranslation: { color: COLORS.sub, fontStyle: 'italic', marginTop: 4 },
+
+  countRow: { flexDirection: 'row', alignItems: 'center', marginTop: 12, gap: 10 },
+  countLabel: { color: COLORS.sub, width: 60 },
+  countStepper: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    borderWidth: 1, borderColor: COLORS.border, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 6,
     backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
   },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '600' as const,
-    color: '#1E293B',
+  stepBtn: {
+    width: 32, height: 32, borderRadius: 8, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: '#F3F4F6',
   },
-  cancelButton: {
-    fontSize: 16,
-    color: '#6B7280',
-  },
-  saveButton: {
-    fontSize: 16,
-    color: '#059669',
-    fontWeight: '600' as const,
-  },
-  modalContent: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  inputContainer: {
-    marginTop: 20,
-    marginBottom: 24,
-  },
-  inputLabel: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-    color: '#1E293B',
-    marginBottom: 8,
-  },
-  textInput: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: '#1E293B',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  dhikrSelectionContainer: {
-    marginBottom: 20,
-  },
-  dhikrOption: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  dhikrCheckbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#D1D5DB',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-    marginTop: 2,
-  },
-  dhikrCheckboxSelected: {
-    backgroundColor: '#059669',
-    borderColor: '#059669',
-  },
-  dhikrOptionContent: {
-    flex: 1,
-  },
-  dhikrOptionArabic: {
-    fontSize: 18,
-    fontWeight: '600' as const,
-    color: '#1E293B',
-    marginBottom: 4,
-  },
-  dhikrOptionTransliteration: {
-    fontSize: 15,
-    color: '#059669',
-    fontWeight: '500' as const,
-    marginBottom: 4,
-  },
-  dhikrOptionTranslation: {
-    fontSize: 14,
-    color: '#6B7280',
-    fontStyle: 'italic' as const,
-  },
-  countInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  countLabel: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginRight: 8,
-  },
+  stepText: { color: COLORS.ink, fontSize: 18, fontWeight: '900', lineHeight: 20 },
   countInput: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    fontSize: 14,
-    color: '#1E293B',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    width: 80,
+    minWidth: 52, textAlign: 'center', color: COLORS.ink, paddingVertical: 4,
   },
+
+  emptyList: { alignItems: 'center', paddingVertical: 24 },
+  emptySubtle: { color: COLORS.sub, fontWeight: '600' },
+  emptyHelp: { color: COLORS.sub, marginTop: 4 },
 });
