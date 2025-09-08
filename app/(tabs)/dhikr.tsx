@@ -184,33 +184,36 @@ export default function DhikrScreen() {
     if (activeRoutine && currentDhikrIndex >= routineLen) setIsDone(true);
   }, [activeRoutine, currentDhikrIndex, routineLen]);
 
-  // Grote teller
-  const onNextOrFinish = () => {
-    if (!activeRoutine || !currentDhikr) return;
-    const willReach = currentCount + 1 >= (currentTarget || 0);
+// Grote teller (tap)
+const onNextOrFinish = () => {
+  if (!activeRoutine || !currentDhikr) return;
+  const willReach = currentCount + 1 >= (currentTarget || 0);
 
-    if (isLastItem && willReach) {
-      Vibration.vibrate(30);
-      setIsDone(true);
-      return;
-    }
-    if (willReach) nextDhikr();
-    else {
-      Vibration.vibrate(10);
-      incrementCount();
-    }
-  };
-
-  // Kleine ✓ knop
-  const onSkipOrFinish = () => {
-    if (!activeRoutine) return;
-    if (isLastItem) {
-      Vibration.vibrate(30);
-      setIsDone(true);
-      return;
-    }
+  if (isLastItem && willReach) {
+    // heel subtiel, één tikje
+    Vibration.vibrate(12);
+    setIsDone(true);
+    return;
+  }
+  if (willReach) {
     nextDhikr();
-  };
+  } else {
+    // geen vibratie bij gewone taps
+    incrementCount();
+  }
+};
+
+// Kleine ✓ knop (skip/finish)
+const onSkipOrFinish = () => {
+  if (!activeRoutine) return;
+  if (isLastItem) {
+    Vibration.vibrate(12);
+    setIsDone(true);
+    return;
+  }
+  nextDhikr();
+};
+
 
   // Counter sluiten en ephemeral opruimen
   const closeCounter = () => {
