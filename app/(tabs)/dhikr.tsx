@@ -160,6 +160,7 @@ export default function DhikrScreen() {
   // Start Quick Start (ephemeral)
   const startPreset = (preset: RoutineInput) => {
     const dhikrList = materializeRoutine(preset);
+    theIdCleanup(); // ensure no leftover ephemeral keeps showing
     const id = createAndStart(preset.name, dhikrList);
     setEphemeralRoutineId(id);
     setIsDone(false);
@@ -184,41 +185,48 @@ export default function DhikrScreen() {
     if (activeRoutine && currentDhikrIndex >= routineLen) setIsDone(true);
   }, [activeRoutine, currentDhikrIndex, routineLen]);
 
-// Grote teller (tap)
-const onNextOrFinish = () => {
-  if (!activeRoutine || !currentDhikr) return;
-  const willReach = currentCount + 1 >= (currentTarget || 0);
+  // Grote teller (tap)
+  const onNextOrFinish = () => {
+    if (!activeRoutine || !currentDhikr) return;
+    const willReach = currentCount + 1 >= (currentTarget || 0);
 
-  if (isLastItem && willReach) {
-    // heel subtiel, één tikje
-    Vibration.vibrate(12);
-    setIsDone(true);
-    return;
-  }
-  if (willReach) {
+    if (isLastItem && willReach) {
+      // heel subtiel, één tikje
+      Vibration.vibrate(12);
+      setIsDone(true);
+      return;
+    }
+    if (willReach) {
+      nextDhikr();
+    } else {
+      // geen vibratie bij gewone taps
+      incrementCount();
+    }
+  };
+
+  // Kleine ✓ knop (skip/finish)
+  const onSkipOrFinish = () => {
+    if (!activeRoutine) return;
+    if (isLastItem) {
+      Vibration.vibrate(12);
+      setIsDone(true);
+      return;
+    }
     nextDhikr();
-  } else {
-    // geen vibratie bij gewone taps
-    incrementCount();
-  }
-};
-
-// Kleine ✓ knop (skip/finish)
-const onSkipOrFinish = () => {
-  if (!activeRoutine) return;
-  if (isLastItem) {
-    Vibration.vibrate(12);
-    setIsDone(true);
-    return;
-  }
-  nextDhikr();
-};
-
+  };
 
   // Counter sluiten en ephemeral opruimen
   const closeCounter = () => {
     setShowCounter(false);
     setIsDone(false);
+    if (ephemeralRoutineId) {
+      deleteRoutine(ephemeralRoutineId);
+      setEphemeralRoutineId(null);
+    }
+  };
+
+  // Cleanup helper (optioneel)
+  const theIdCleanup = () => {
     if (ephemeralRoutineId) {
       deleteRoutine(ephemeralRoutineId);
       setEphemeralRoutineId(null);
@@ -334,14 +342,13 @@ const onSkipOrFinish = () => {
           )}
 
           <TouchableOpacity
-  style={styles.createRoutineButton}
-  onPress={() => setShowCreateModal(true)}
-  activeOpacity={0.85}
->
-  <Plus color={colors.primary[600]} size={20} />
-  <Text style={styles.createRoutineText}>Create Custom Routine</Text>
-</TouchableOpacity>
-
+            style={styles.createRoutineButton}
+            onPress={() => setShowCreateModal(true)}
+            activeOpacity={0.85}
+          >
+            <Plus color={colors.primary[600]} size={20} />
+            <Text style={styles.createRoutineText}>Create Custom Routine</Text>
+          </TouchableOpacity>
 
           {/* All Dhikr */}
           <View style={styles.sectionHeader}>
@@ -377,8 +384,8 @@ const onSkipOrFinish = () => {
             // DONE
             <View style={styles.doneWrap}>
               <View style={styles.doneBadge}><Check color="#fff" size={36} /></View>
-              <Text style={styles.doneTitle}>Routine complete!</Text>
-              <Text style={styles.doneSubtitle}>Allahumma Barik — You’ve completed this routine.</Text>
+              <Text style={styles.doneTitle}>Allahumma barik!</Text>
+              <Text style={styles.doneSubtitle}>You’ve completed this routine.</Text>
               <View style={styles.doneButtons}>
                 <TouchableOpacity style={[styles.doneBtn, styles.donePrimary]} onPress={closeCounter}>
                   <Text style={styles.donePrimaryText}>Close</Text>
@@ -683,26 +690,26 @@ const styles = StyleSheet.create({
   createModalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: colors.surface },
   createModalTitle: { ...typography.h2, color: colors.ink.primary, fontSize: 20 },
   createModalClose: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
-  createRoutineButton: {
-  backgroundColor: colors.surface,
-  borderRadius: 16,
-  padding: 20,
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'center',
-  borderWidth: 2,
-  borderColor: colors.primary[500] + '30',
-  borderStyle: 'dashed',
-  marginBottom: 20,
-},
-createRoutineText: {
-  ...typography.body,
-  color: colors.primary[600],
-  fontWeight: '600',
-  marginLeft: 8,
-  fontSize: 16,
-},
 
+  createRoutineButton: {
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    padding: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: colors.primary[500] + '30',
+    borderStyle: 'dashed',
+    marginBottom: 20,
+  },
+  createRoutineText: {
+    ...typography.body,
+    color: colors.primary[600],
+    fontWeight: '600',
+    marginLeft: 8,
+    fontSize: 16,
+  },
 
   inputLabel: { ...typography.body, color: colors.ink.primary, fontWeight: '600', marginBottom: 8, fontSize: 16 },
   routineNameInput: { backgroundColor: colors.surface, borderRadius: 12, padding: 16, fontSize: 16, color: colors.ink.primary, borderWidth: 1, borderColor: colors.border },
