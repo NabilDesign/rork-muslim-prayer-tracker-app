@@ -19,10 +19,12 @@ import {
 import { Stack } from 'expo-router';
 import { Play, Plus, Trash2, X, Check, Minus, RotateCcw, Pause } from 'lucide-react-native';
 
+// ✅ Alleen de store blijft extern
 import { useDhikrStore } from '../../src/store/dhikr-store';
-import dhikrData from '../../src/data/dhikr.json';
 
-// ---------- theme ----------
+/* ------------------------------------------------------------------ */
+/* THEME (inline)                                                      */
+/* ------------------------------------------------------------------ */
 const colors = {
   bg: '#F7FAFC',
   surface: '#FFFFFF',
@@ -39,7 +41,35 @@ const typography = {
   small: { fontSize: 13 },
 };
 
-// ---------- types ----------
+/* ------------------------------------------------------------------ */
+/* DATA (inline i.p.v. ../../src/data/dhikr.json)                      */
+/* id's matchen met presets en UI                                      */
+/* ------------------------------------------------------------------ */
+type BaseDhikr = {
+  id: string;
+  arabic: string;
+  translit: string;
+  translation: string;
+  defaultTarget?: number;
+  category?: string;
+};
+
+const BASE_DHIKR: BaseDhikr[] = [
+  { id: 'subhanallah', arabic: 'سُبْحَانَ اللَّهِ', translit: 'Subhan Allah', translation: 'Glory be to Allah', defaultTarget: 33, category: 'Tasbih' },
+  { id: 'alhamdulillah', arabic: 'الْحَمْدُ لِلَّهِ', translit: 'Alhamdulillah', translation: 'Praise be to Allah', defaultTarget: 33, category: 'Tahmid' },
+  { id: 'allahu-akbar', arabic: 'اللَّهُ أَكْبَرُ', translit: 'Allahu Akbar', translation: 'Allah is the Greatest', defaultTarget: 34, category: 'Takbir' },
+  { id: 'la-ilaha-illa-allah', arabic: 'لَا إِلَهَ إِلَّا اللَّهُ', translit: 'La ilaha illa Allah', translation: 'There is no god but Allah', defaultTarget: 100, category: 'Tahlil' },
+  { id: 'astaghfirullah', arabic: 'أَسْتَغْفِرُ اللَّهَ', translit: 'Astaghfirullah', translation: 'I seek forgiveness from Allah', defaultTarget: 100, category: 'Istighfar' },
+  { id: 'salawat', arabic: 'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ', translit: 'Allahumma salli ala Muhammad', translation: 'O Allah, send blessings upon Muhammad', defaultTarget: 10, category: 'Salawat' },
+  { id: 'hasbi-allah', arabic: 'حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ', translit: 'Hasbuna Allahu wa ni‘ma al-wakeel', translation: 'Allah is sufficient for us, the best Disposer of affairs', defaultTarget: 7, category: 'Tawakkul' },
+  { id: 'ayat-kursi-ending', arabic: 'وَلَا يَئُودُهُ حِفْظُهُمَا...', translit: 'Ayat al-Kursi (ending)', translation: '…and their preservation tires Him not…', defaultTarget: 10, category: 'Protection' },
+  { id: 'dua-protection', arabic: 'أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ', translit: "A‘udhu billahi min ash-shaytan ir-rajeem", translation: 'I seek refuge in Allah from Satan, the accursed', defaultTarget: 3, category: 'Protection' },
+  { id: 'morning-evening-dhikr', arabic: 'رَضِيتُ بِاللَّهِ رَبًّا...', translit: 'Radeetu billahi rabban…', translation: 'I am pleased with Allah as my Lord…', defaultTarget: 1, category: 'Morning/Evening' },
+];
+
+/* ------------------------------------------------------------------ */
+/* TYPES voor store                                                    */
+/* ------------------------------------------------------------------ */
 type StoreDhikrItem = {
   id: string;
   text: string;
@@ -50,55 +80,34 @@ type StoreDhikrItem = {
 };
 type RoutineInput = { name: string; items: Array<{ id: string; target: number }> };
 
-// Map uit dhikr.json naar store-shape
-const toStoreItem = (d: any, target: number): StoreDhikrItem => ({
-  id: d.id,
-  text: d.arabic ?? d.text ?? '',
-  transliteration: d.translit ?? d.transliteration ?? '',
-  translation: d.translation ?? '',
+/* Helpers om BASE_DHIKR → store shape te mappen */
+const toStoreItem = (d: BaseDhikr | undefined, target: number): StoreDhikrItem => ({
+  id: d?.id ?? '',
+  text: d?.arabic ?? '',
+  transliteration: d?.translit ?? '',
+  translation: d?.translation ?? '',
   count: target,
-  category: d.category ?? '',
+  category: d?.category ?? '',
 });
 
-// Beschikbare dhikr (bron voor UI)
-const AVAILABLE = (dhikrData as any[]).map((d) => ({
+/* Beschikbaar voor UI/filters */
+const AVAILABLE = BASE_DHIKR.map((d) => ({
   id: d.id,
-  text: d.arabic ?? d.text ?? '',
-  transliteration: d.translit ?? d.transliteration ?? '',
-  translation: d.translation ?? '',
-  defaultTarget: d.defaultTarget ?? d.count ?? 33,
+  text: d.arabic,
+  transliteration: d.translit,
+  translation: d.translation,
+  defaultTarget: d.defaultTarget ?? 33,
   category: d.category ?? 'General',
 }));
 const CATEGORIES = ['All', ...Array.from(new Set(AVAILABLE.map(d => d.category)))];
 
-// Presets (quick start)
 const presetRoutines: RoutineInput[] = [
-  {
-    name: 'Post-Salah Tasbih',
-    items: [
-      { id: 'subhanallah', target: 33 },
-      { id: 'alhamdulillah', target: 33 },
-      { id: 'allahu-akbar', target: 34 },
-    ],
-  },
-  {
-    name: 'Morning Dhikr',
-    items: [
-      { id: 'morning-evening-dhikr', target: 1 },
-      { id: 'astaghfirullah', target: 100 },
-      { id: 'la-ilaha-illa-allah', target: 100 },
-      { id: 'salawat', target: 10 },
-    ],
-  },
-  {
-    name: 'Protection & Refuge',
-    items: [
-      { id: 'dua-protection', target: 3 },
-      { id: 'ayat-kursi-ending', target: 10 },
-      { id: 'hasbi-allah', target: 7 },
-    ],
-  },
+  { name: 'Post-Salah Tasbih', items: [{ id: 'subhanallah', target: 33 }, { id: 'alhamdulillah', target: 33 }, { id: 'allahu-akbar', target: 34 }] },
+  { name: 'Morning Dhikr', items: [{ id: 'morning-evening-dhikr', target: 1 }, { id: 'astaghfirullah', target: 100 }, { id: 'la-ilaha-illa-allah', target: 100 }, { id: 'salawat', target: 10 }] },
+  { name: 'Protection & Refuge', items: [{ id: 'dua-protection', target: 3 }, { id: 'ayat-kursi-ending', target: 10 }, { id: 'hasbi-allah', target: 7 }] },
 ];
+
+/* ------------------------------------------------------------------ */
 
 export default function DhikrScreen() {
   const {
@@ -129,11 +138,11 @@ export default function DhikrScreen() {
   const [category, setCategory] = useState<string>('All');
 
   // Helpers
-  const dhikrById = (id: string) => (dhikrData as any[]).find(d => d.id === id);
+  const dhikrById = (id: string) => BASE_DHIKR.find(d => d.id === id);
   const materializeRoutine = (r: RoutineInput): StoreDhikrItem[] =>
     r.items.map(it => toStoreItem(dhikrById(it.id), it.target));
 
-  // Create & start routine (vind ID zeker in store)
+  // Create & start routine (vind nieuwe ID uit store)
   const createAndStart = (name: string, list: StoreDhikrItem[]) => {
     const beforeIds = new Set(useDhikrStore.getState().routines.map((r: any) => r.id));
     createRoutine({ name, dhikrList: list } as any);
@@ -170,7 +179,7 @@ export default function DhikrScreen() {
     Animated.timing(progressAnim, { toValue: routineProgress, duration: 500, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();
   }, [routineProgress]);
 
-  // Safety: als index voorbij lengte gaat → done
+  // Safety: index > lengte => done
   useEffect(() => {
     if (activeRoutine && currentDhikrIndex >= routineLen) setIsDone(true);
   }, [activeRoutine, currentDhikrIndex, routineLen]);
@@ -559,7 +568,9 @@ export default function DhikrScreen() {
   );
 }
 
-// ---------- styles ----------
+/* ------------------------------------------------------------------ */
+/* STYLES                                                             */
+/* ------------------------------------------------------------------ */
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 16, alignItems: 'center' },
