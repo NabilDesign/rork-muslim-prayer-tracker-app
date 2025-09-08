@@ -14,15 +14,15 @@ import {
   FlatList,
   Animated,
   Easing,
+  Vibration,
 } from 'react-native';
 import { Stack } from 'expo-router';
 import { Play, Plus, Trash2, X, Check, Minus, RotateCcw, Pause } from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
 
 import { useDhikrStore } from '../../src/store/dhikr-store';
 import dhikrData from '../../src/data/dhikr.json';
 
-// ---------- theme (inline; geen alias) ----------
+// ---------- theme ----------
 const colors = {
   bg: '#F7FAFC',
   surface: '#FFFFFF',
@@ -60,7 +60,7 @@ const toStoreItem = (d: any, target: number): StoreDhikrItem => ({
   category: d.category ?? '',
 });
 
-// Beschikbare dhikr als bron (voor lijstweergave & selectie)
+// Beschikbare dhikr (bron voor UI)
 const AVAILABLE = (dhikrData as any[]).map((d) => ({
   id: d.id,
   text: d.arabic ?? d.text ?? '',
@@ -69,7 +69,6 @@ const AVAILABLE = (dhikrData as any[]).map((d) => ({
   defaultTarget: d.defaultTarget ?? d.count ?? 33,
   category: d.category ?? 'General',
 }));
-
 const CATEGORIES = ['All', ...Array.from(new Set(AVAILABLE.map(d => d.category)))];
 
 // Presets (quick start)
@@ -134,7 +133,7 @@ export default function DhikrScreen() {
   const materializeRoutine = (r: RoutineInput): StoreDhikrItem[] =>
     r.items.map(it => toStoreItem(dhikrById(it.id), it.target));
 
-  // Create & start routine (ID-zeker)
+  // Create & start routine (vind ID zeker in store)
   const createAndStart = (name: string, list: StoreDhikrItem[]) => {
     const beforeIds = new Set(useDhikrStore.getState().routines.map((r: any) => r.id));
     createRoutine({ name, dhikrList: list } as any);
@@ -176,28 +175,28 @@ export default function DhikrScreen() {
     if (activeRoutine && currentDhikrIndex >= routineLen) setIsDone(true);
   }, [activeRoutine, currentDhikrIndex, routineLen]);
 
-  // Tap op grote teller
+  // Grote teller
   const onNextOrFinish = () => {
     if (!activeRoutine || !currentDhikr) return;
     const willReach = currentCount + 1 >= (currentTarget || 0);
 
     if (isLastItem && willReach) {
-      Haptics.notificationAsync?.(Haptics.NotificationFeedbackType.Success);
+      Vibration.vibrate(30);
       setIsDone(true);
       return;
     }
     if (willReach) nextDhikr();
     else {
-      Haptics.impactAsync?.(Haptics.ImpactFeedbackStyle.Light);
+      Vibration.vibrate(10);
       incrementCount();
     }
   };
 
-  // Kleine ✓ knop: skip of finish
+  // Kleine ✓ knop
   const onSkipOrFinish = () => {
     if (!activeRoutine) return;
     if (isLastItem) {
-      Haptics.notificationAsync?.(Haptics.NotificationFeedbackType.Success);
+      Vibration.vibrate(30);
       setIsDone(true);
       return;
     }
@@ -322,7 +321,7 @@ export default function DhikrScreen() {
             </View>
           )}
 
-          {/* All Dhikr (bron uit dhikr.json) */}
+          {/* All Dhikr */}
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>All Dhikr</Text>
             <Text style={styles.sectionDescription}>Browse individual remembrances</Text>
@@ -368,7 +367,7 @@ export default function DhikrScreen() {
               </View>
             </View>
           ) : !activeRoutine || !currentDhikr ? (
-            // Fallback (nooit meer leeg)
+            // Fallback
             <View style={styles.doneWrap}>
               <Text style={[styles.doneTitle, { marginBottom: 8 }]}>Preparing…</Text>
               <Text style={styles.doneSubtitle}>Starting your routine</Text>
@@ -416,7 +415,7 @@ export default function DhikrScreen() {
         </View>
       </Modal>
 
-      {/* Create Routine Modal (SectionList parent) */}
+      {/* Create Routine Modal */}
       <Modal visible={showCreateModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowCreateModal(false)}>
         <SafeAreaView style={styles.createModalContainer}>
           <View style={styles.createModalHeader}>
@@ -638,7 +637,6 @@ const styles = StyleSheet.create({
   counterButtonText: { fontSize: 42, fontWeight: '800', color: colors.gradient.start },
 
   counterControlsRow: { flexDirection: 'row', gap: 12, marginTop: 12 },
-
   smallCtrlBtn: { width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
 
   // Done view
