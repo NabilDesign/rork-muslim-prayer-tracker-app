@@ -368,7 +368,7 @@ const onSkipOrFinish = () => {
             <View style={styles.doneWrap}>
               <View style={styles.doneBadge}><Check color="#fff" size={36} /></View>
               <Text style={styles.doneTitle}>Routine complete!</Text>
-              <Text style={styles.doneSubtitle}>Masha’Allah — je hebt alles afgerond.</Text>
+              <Text style={styles.doneSubtitle}>Allahumma Barik — You’ve completed this routine.</Text>
               <View style={styles.doneButtons}>
                 <TouchableOpacity style={[styles.doneBtn, styles.donePrimary]} onPress={closeCounter}>
                   <Text style={styles.donePrimaryText}>Close</Text>
