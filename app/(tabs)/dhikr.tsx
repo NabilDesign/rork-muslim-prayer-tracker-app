@@ -683,6 +683,26 @@ const styles = StyleSheet.create({
   createModalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: colors.surface },
   createModalTitle: { ...typography.h2, color: colors.ink.primary, fontSize: 20 },
   createModalClose: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  createRoutineButton: {
+  backgroundColor: colors.surface,
+  borderRadius: 16,
+  padding: 20,
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'center',
+  borderWidth: 2,
+  borderColor: colors.primary[500] + '30',
+  borderStyle: 'dashed',
+  marginBottom: 20,
+},
+createRoutineText: {
+  ...typography.body,
+  color: colors.primary[600],
+  fontWeight: '600',
+  marginLeft: 8,
+  fontSize: 16,
+},
+
 
   inputLabel: { ...typography.body, color: colors.ink.primary, fontWeight: '600', marginBottom: 8, fontSize: 16 },
   routineNameInput: { backgroundColor: colors.surface, borderRadius: 12, padding: 16, fontSize: 16, color: colors.ink.primary, borderWidth: 1, borderColor: colors.border },
