@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Muslim Prayer Tracker App",
-    "slug": "muslim-prayer-tracker-app",
+    "name": "DeenRoutine",
+    "slug": "DeenRoutine",
     "version": "1.7.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
