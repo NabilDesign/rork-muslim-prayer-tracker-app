@@ -4,13 +4,8 @@
   },
   "build": {
     "production": {
-      "ios": {
-        "workflow": "managed",
-        "buildConfiguration": "Release",
-        "image": "latest"
-      },
+      "distribution": "store",
       "android": {
-        "workflow": "managed",
         "buildType": "app-bundle"
       }
     }
